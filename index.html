@@ -3,72 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Pattern Heat Tracker</title>
+    <title>Pro Geometry Heat Tracker</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: #0d1b2a; color: #e0e1dd; min-height: 100vh; padding: 10px; }
-        
-        .main-layout { display: flex; justify-content: center; gap: 15px; max-width: 1200px; margin: 0 auto; }
-        .side-stats { width: 160px; display: flex; flex-direction: column; gap: 10px; }
+        .main-layout { display: flex; justify-content: center; gap: 15px; max-width: 1300px; margin: 0 auto; }
+        .side-stats { width: 200px; display: flex; flex-direction: column; gap: 10px; }
         .container { flex: 1; max-width: 600px; }
-        
         header { text-align: center; padding: 10px 0; }
-        h1 { font-size: 1.5rem; color: #4cc9f0; }
-        
+        h1 { font-size: 1.5rem; color: #4cc9f0; margin-bottom: 5px; }
         .trigger-panel {
             background: #1b263b; border: 2px solid #f72585; border-radius: 12px;
-            padding: 15px; margin-bottom: 15px; min-height: 100px;
+            padding: 15px; margin-bottom: 15px; min-height: 120px;
         }
         .trigger-item { 
-            background: #f72585; color: white; padding: 5px 10px; 
-            border-radius: 5px; margin: 5px; display: inline-block; font-weight: bold;
-            animation: flash 1s infinite alternate;
+            background: #f72585; color: white; padding: 6px 12px; 
+            border-radius: 5px; margin: 4px; display: inline-block; font-weight: bold; font-size: 0.85rem;
         }
-        @keyframes flash { from { opacity: 1; } to { opacity: 0.6; } }
-
-        .results-section {
-            background: rgba(13, 27, 42, 0.9); border-radius: 12px;
-            padding: 15px; margin-bottom: 15px; border: 1px solid #1b4965;
-        }
-        .section-title { color: #72efdd; margin-bottom: 10px; font-size: 0.8rem; text-align: center; text-transform: uppercase; }
-        
-        .v-box { padding: 8px; border-radius: 6px; text-align: center; margin-bottom: 5px; font-size: 0.9rem; }
-        .v-cold { background: #023e8a; border: 1px solid #4361ee; }
-
+        .results-section { background: rgba(13, 27, 42, 0.9); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #1b4965; }
+        .section-title { color: #72efdd; margin-bottom: 10px; font-size: 0.75rem; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        .v-box { padding: 8px; border-radius: 6px; margin-bottom: 5px; font-size: 0.8rem; background: #023e8a; border: 1px solid #4361ee; }
         .number-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin-top: 10px; }
-        .number-btn {
-            aspect-ratio: 1; font-size: 0.8rem; font-weight: bold; border: none; border-radius: 4px;
-            cursor: pointer; color: white; display: flex; align-items: center; justify-content: center;
-        }
-        .zero { background: #38b000; grid-column: span 12; height: 30px; margin-bottom: 5px; }
+        .number-btn { aspect-ratio: 1; font-size: 0.8rem; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; color: white; }
+        .zero { background: #38b000; grid-column: span 12; height: 35px; margin-bottom: 5px; }
         .even { background: #1b263b; border: 1px solid #4361ee; }
         .odd { background: #4361ee; }
-        
         .input-row { display: flex; gap: 8px; margin: 15px 0; }
-        input { flex: 1; padding: 8px; border-radius: 5px; border: 1px solid #4361ee; background: #1b263b; color: white; }
-        .btn { padding: 8px 15px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; color: white; }
-        .btn-load { background: #4361ee; }
-        .btn-clear { background: #f72585; }
-
-        .history-list { display: flex; flex-wrap: wrap; gap: 5px; font-size: 0.8rem; }
-        .hist-chip { background: #4361ee; padding: 2px 6px; border-radius: 3px; }
+        input { flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #4361ee; background: #1b263b; color: white; }
+        .btn { padding: 10px 15px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; color: white; background: #4361ee; }
+        .history-list { display: flex; flex-wrap: wrap; gap: 4px; }
+        .hist-chip { background: #1b4965; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; }
     </style>
 </head>
 <body>
 
 <div class="main-layout">
     <div class="side-stats">
-        <div class="section-title">Target Cold List</div>
+        <div class="section-title">Detected Cold Patterns</div>
         <div id="coldListUI"></div>
     </div>
 
     <div class="container">
         <header>
-            <h1>PRO MULTI-TRACKER</h1>
-            <div id="spinCount" style="color:#72efdd">Spins: 0</div>
+            <h1>PRO GEOMETRY TRACKER</h1>
+            <div id="spinCount" style="color:#72efdd">Total History: 0</div>
         </header>
 
-        <div class="section-title">ACTIVE TRIGGERS</div>
+        <div class="section-title">Active Triggers (Persistent)</div>
         <div class="trigger-panel" id="triggerPanel"></div>
 
         <div class="number-grid">
@@ -77,13 +58,13 @@
         </div>
 
         <div class="input-row">
-            <input type="text" id="csvInput" placeholder="Paste history (e.g. 1,2,3)">
-            <button class="btn btn-load" onclick="loadCSV()">Load</button>
-            <button class="btn btn-clear" onclick="clearData()">Clear</button>
+            <input type="text" id="csvInput" placeholder="Paste: 1,2,3...">
+            <button class="btn" onclick="loadCSV()">Load</button>
+            <button class="btn" style="background:#f72585" onclick="clearData()">Clear</button>
         </div>
 
         <div class="results-section">
-            <div class="section-title">Recent History</div>
+            <div class="section-title">History</div>
             <div class="history-list" id="historyList"></div>
         </div>
     </div>
@@ -91,124 +72,153 @@
 
 <script>
     let history = [];
-    
-    // Mapping Functions
-    const getSplit = (n) => n === 0 ? [] : [Math.ceil(n/2)]; // Simplified Split logic
-    const getCorner = (n) => n === 0 ? [] : [Math.ceil(n/4)]; // Simplified Corner logic
-    const getStreet = (n) => n === 0 ? 0 : Math.ceil(n/3);
-    const getDS = (n) => n === 0 ? 0 : Math.ceil(n/6);
-    const getDozen = (n) => n === 0 ? 0 : Math.ceil(n/12);
-    const getCol = (n) => n === 0 ? 0 : (n % 3 === 0 ? 3 : n % 3);
+    let activeTriggers = new Set();
+
+    // Mapping Logic for Exact Geometry
+    const getSplits = (n) => {
+        if (n === 0) return [];
+        let s = [];
+        if (n > 3) s.push(`${n-3}/${n}`); // Vertical
+        if (n < 34) s.push(`${n}/${n+3}`); // Vertical
+        if (n % 3 !== 1) s.push(`${n-1}/${n}`); // Horizontal Left
+        if (n % 3 !== 0) s.push(`${n}/${n+1}`); // Horizontal Right
+        return s;
+    };
+
+    const getCorners = (n) => {
+        if (n === 0) return [];
+        let c = [];
+        let row = Math.floor((n-1)/3);
+        let col = (n-1)%3;
+        // Top-Left
+        if (row > 0 && col > 0) c.push(`${n-4}/${n-3}/${n-1}/${n}`);
+        // Top-Right
+        if (row > 0 && col < 2) c.push(`${n-3}/${n-2}/${n}/${n+1}`);
+        // Bottom-Left
+        if (row < 11 && col > 0) c.push(`${n-1}/${n}/${n+2}/${n+3}`);
+        // Bottom-Right
+        if (row < 11 && col < 2) c.push(`${n}/${n+1}/${n+3}/${n+4}`);
+        return c;
+    };
+
+    const getStreet = (n) => n === 0 ? null : Math.ceil(n/3);
+    const getDS = (n) => n === 0 ? null : Math.ceil(n/6);
+    const getDoz = (n) => n === 0 ? null : Math.ceil(n/12);
+    const getCol = (n) => n === 0 ? null : (n % 3 === 0 ? 3 : n % 3);
 
     function addNumber(n) {
         history.push(n);
+        processTriggers(n);
         analyze();
+    }
+
+    function processTriggers(newNum) {
+        // Remove trigger if the newly hit number belongs to that pattern
+        const currentStreet = getStreet(newNum);
+        const currentDS = getDS(newNum);
+        const currentDoz = getDoz(newNum);
+        const currentCol = getCol(newNum);
+        const currentSplits = getSplits(newNum);
+        const currentCorners = getCorners(newNum);
+
+        activeTriggers.forEach(trig => {
+            if (trig.includes(`STR ${newNum} `)) activeTriggers.delete(trig);
+            if (currentStreet && trig.includes(`ST ${currentStreet} `)) activeTriggers.delete(trig);
+            if (currentDS && trig.includes(`DS ${currentDS} `)) activeTriggers.delete(trig);
+            if (currentDoz && trig.includes(`DZ ${currentDoz} `)) activeTriggers.delete(trig);
+            if (currentCol && trig.includes(`COL ${currentCol} `)) activeTriggers.delete(trig);
+            currentSplits.forEach(s => { if(trig.includes(`SPL ${s} `)) activeTriggers.delete(trig); });
+            currentCorners.forEach(c => { if(trig.includes(`CNR ${c} `)) activeTriggers.delete(trig); });
+        });
+    }
+
+    function analyze() {
+        if (history.length < 2) return;
+
+        // Count frequencies based on your specific history windows
+        const getCounts = (arr) => {
+            let counts = {};
+            arr.forEach(x => { if(x) counts[x] = (counts[x] || 0) + 1; });
+            return counts;
+        };
+
+        const coldSTR = Object.entries(getCounts(history)).sort((a,b)=>a[1]-b[1]).slice(0,2).map(x=>x[0]);
+        
+        let allSplits = [], allCorners = [];
+        history.forEach(n => { allSplits.push(...getSplits(n)); allCorners.push(...getCorners(n)); });
+        const coldSPL = Object.entries(getCounts(allSplits)).sort((a,b)=>a[1]-b[1]).slice(0,2).map(x=>x[0]);
+        const coldCNR = Object.entries(getCounts(allCorners)).sort((a,b)=>a[1]-b[1]).slice(0,2).map(x=>x[0]);
+
+        const coldST = Object.entries(getCounts(history.slice(-36).map(getStreet))).sort((a,b)=>a[1]-b[1]).slice(0,2).map(x=>x[0]);
+        const coldDS = Object.entries(getCounts(history.slice(-21).map(getDS))).sort((a,b)=>a[1]-b[1]).slice(0,2).map(x=>x[0]);
+        const coldDZ = Object.entries(getCounts(history.slice(-14).map(getDoz))).sort((a,b)=>a[1]-b[1]).slice(0,1).map(x=>x[0]);
+        const coldCL = Object.entries(getCounts(history.slice(-14).map(getCol))).sort((a,b)=>a[1]-b[1]).slice(0,1).map(x=>x[0]);
+
+        // Trigger Check Logic
+        const lastNum = history[history.length - 1];
+        
+        const check = (label, currentVal, coldList, min, max) => {
+            if (!currentVal) return;
+            if (coldList.includes(currentVal.toString())) {
+                // Look for previous spin
+                for(let i = history.length - 2; i >= 0; i--) {
+                    let prev;
+                    if(label === 'STR') prev = history[i].toString();
+                    if(label === 'ST') prev = (getStreet(history[i])||"").toString();
+                    if(label === 'DS') prev = (getDS(history[i])||"").toString();
+                    if(label === 'DZ') prev = (getDoz(history[i])||"").toString();
+                    if(label === 'COL') prev = (getCol(history[i])||"").toString();
+                    if(label === 'SPL') { if(getSplits(history[i]).includes(currentVal)) prev = currentVal; }
+                    if(label === 'CNR') { if(getCorners(history[i]).includes(currentVal)) prev = currentVal; }
+
+                    if(prev === currentVal.toString()) {
+                        let gap = (history.length - 1) - i;
+                        if(gap >= min && gap <= max) activeTriggers.add(`${label} ${currentVal} (${gap})`);
+                        break;
+                    }
+                }
+            }
+        };
+
+        check('STR', lastNum, coldSTR, 2, 14);
+        getSplits(lastNum).forEach(s => check('SPL', s, coldSPL, 2, 14));
+        getCorners(lastNum).forEach(c => check('CNR', c, coldCNR, 2, 14));
+        check('ST', getStreet(lastNum), coldST, 2, 6);
+        check('DS', getDS(lastNum), coldDS, 2, 6);
+        check('DZ', getDoz(lastNum), coldDZ, 2, 4);
+        check('COL', getCol(lastNum), coldCL, 2, 4);
+
+        updateUI(coldSTR, coldSPL, coldCNR, coldST, coldDS, coldDZ, coldCL);
+    }
+
+    function updateUI(str, spl, cnr, st, ds, dz, cl) {
+        document.getElementById('triggerPanel').innerHTML = Array.from(activeTriggers).map(t => `<div class="trigger-item">${t}</div>`).join('');
+        document.getElementById('spinCount').textContent = `Total History: ${history.length}`;
+        document.getElementById('historyList').innerHTML = history.slice(-30).map(n => `<div class="hist-chip">${n}</div>`).reverse().join('');
+        
+        document.getElementById('coldListUI').innerHTML = `
+            <div class="v-box"><b>STR:</b> ${str.join(', ')}</div>
+            <div class="v-box"><b>SPL:</b> ${spl.join(' | ')}</div>
+            <div class="v-box"><b>CNR:</b> ${cnr.join(' | ')}</div>
+            <div class="v-box"><b>ST (36):</b> ${st.join(', ')}</div>
+            <div class="v-box"><b>DS (21):</b> ${ds.join(', ')}</div>
+            <div class="v-box"><b>DZ (14):</b> ${dz.join(', ')}</div>
+            <div class="v-box"><b>COL (14):</b> ${cl.join(', ')}</div>
+        `;
     }
 
     function loadCSV() {
         const val = document.getElementById('csvInput').value;
         val.split(',').forEach(v => {
             let n = parseInt(v.trim());
-            if (!isNaN(n)) history.push(n);
+            if (!isNaN(n)) { history.push(n); processTriggers(n); }
         });
         analyze();
+        document.getElementById('csvInput').value = '';
     }
 
-    function clearData() {
-        history = [];
-        analyze();
-    }
+    function clearData() { history = []; activeTriggers.clear(); analyze(); }
 
-    function analyze() {
-        if (history.length < 5) { updateDisplay([], []); return; }
-
-        const counts = { num: {}, split: {}, corner: {}, street: {}, ds: {}, doz: {}, col: {} };
-        
-        // 1. Calculate frequencies for everything
-        history.forEach(n => {
-            counts.num[n] = (counts.num[n] || 0) + 1;
-            getSplit(n).forEach(s => counts.split[s] = (counts.split[s] || 0) + 1);
-            getCorner(n).forEach(c => counts.corner[c] = (counts.corner[c] || 0) + 1);
-            if(n>0){
-                let st = getStreet(n); counts.street[st] = (counts.street[st] || 0) + 1;
-                let ds = getDS(n); counts.ds[ds] = (counts.ds[ds] || 0) + 1;
-                let dz = getDozen(n); counts.doz[dz] = (counts.doz[dz] || 0) + 1;
-                let cl = getCol(n); counts.col[cl] = (counts.col[cl] || 0) + 1;
-            }
-        });
-
-        // 2. Identify Cold (Bottom 1 or 2 items based on your instructions)
-        const getCold = (obj, limit) => Object.entries(obj).sort((a,b) => a[1]-b[1]).slice(0, limit).map(x => x[0]);
-        
-        const coldTracker = {
-            num: getCold(counts.num, 2),
-            split: getCold(counts.split, 2),
-            corner: getCold(counts.corner, 2),
-            street: getCold(counts.street, 2),
-            ds: getCold(counts.ds, 2),
-            doz: getCold(counts.doz, 1),
-            col: getCold(counts.col, 1)
-        };
-
-        // 3. Trigger Logic
-        const triggers = [];
-        const lastSpin = history[history.length - 1];
-
-        const checkTrigger = (label, currentVal, coldList, minGap, maxGap) => {
-            if (coldList.includes(currentVal.toString())) {
-                // Find previous occurrence
-                let lastIdx = -1;
-                for(let i = history.length - 2; i >= 0; i--) {
-                    let prevVal;
-                    if(label === "STR") prevVal = history[i];
-                    if(label === "SPL") prevVal = getSplit(history[i])[0];
-                    if(label === "CNR") prevVal = getCorner(history[i])[0];
-                    if(label === "ST") prevVal = getStreet(history[i]);
-                    if(label === "DS") prevVal = getDS(history[i]);
-                    if(label === "DOZ") prevVal = getDozen(history[i]);
-                    if(label === "COL") prevVal = getCol(history[i]);
-
-                    if(prevVal == currentVal) {
-                        lastIdx = i;
-                        break;
-                    }
-                }
-
-                if (lastIdx !== -1) {
-                    let gap = (history.length - 1) - lastIdx;
-                    if (gap >= minGap && gap <= maxGap) {
-                        triggers.push(`${label} ${currentVal} (${gap} spins)`);
-                    }
-                }
-            }
-        };
-
-        checkTrigger("STR", lastSpin, coldTracker.num, 2, 14);
-        getSplit(lastSpin).forEach(s => checkTrigger("SPL", s, coldTracker.split, 2, 14));
-        getCorner(lastSpin).forEach(c => checkTrigger("CNR", c, coldTracker.corner, 2, 14));
-        if(lastSpin > 0) {
-            checkTrigger("ST", getStreet(lastSpin), coldTracker.street, 2, 6);
-            checkTrigger("DS", getDS(lastSpin), coldTracker.ds, 2, 6);
-            checkTrigger("DOZ", getDozen(lastSpin), coldTracker.doz, 2, 4);
-            checkTrigger("COL", getCol(lastSpin), coldTracker.col, 2, 4);
-        }
-
-        updateDisplay(triggers, coldTracker);
-    }
-
-    function updateDisplay(triggers, cold) {
-        document.getElementById('triggerPanel').innerHTML = triggers.map(t => `<div class="trigger-item">${t}</div>`).join('');
-        document.getElementById('spinCount').textContent = `Total Spins: ${history.length}`;
-        
-        let coldHtml = '';
-        for(let type in cold) {
-            coldHtml += `<div class="v-box v-cold"><strong>${type.toUpperCase()}:</strong> ${cold[type].join(', ')}</div>`;
-        }
-        document.getElementById('coldListUI').innerHTML = coldHtml;
-        document.getElementById('historyList').innerHTML = history.slice(-20).map(n => `<div class="hist-chip">${n}</div>`).join('');
-    }
-
-    // Init Grid
     const grid = document.getElementById('gridBody');
     for (let i = 1; i <= 36; i++) {
         const btn = document.createElement('button');
@@ -218,6 +228,5 @@
         grid.appendChild(btn);
     }
 </script>
-
 </body>
 </html>
