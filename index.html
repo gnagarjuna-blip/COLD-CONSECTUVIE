@@ -2,256 +2,99 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Absence Tracker</title>
+    <title>BIET Nature Protection - Advanced DS Tracker</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: #0b0e14; color: #e0e1dd; min-height: 100vh; padding: 10px; }
-        .main-layout { display: flex; justify-content: center; gap: 15px; max-width: 1300px; margin: 0 auto; }
-        .side-stats { width: 220px; display: flex; flex-direction: column; gap: 10px; }
-        .container { flex: 1; max-width: 600px; }
-        header { text-align: center; padding: 10px 0; border-bottom: 1px solid #1b4965; margin-bottom: 15px; }
-        h1 { font-size: 1.4rem; color: #4cc9f0; }
-        .trigger-panel {
-            background: #1a1e26; border: 2px solid #f72585; border-radius: 12px;
-            padding: 15px; margin-bottom: 15px; min-height: 100px; display: flex; flex-wrap: wrap; gap: 8px;
-        }
-        .trigger-item { 
-            background: linear-gradient(45deg, #f72585, #b5179e); color: white; padding: 8px 12px; 
-            border-radius: 6px; font-weight: bold; font-size: 0.8rem; box-shadow: 0 4px 15px rgba(247, 37, 133, 0.3);
-        }
-        .section-title { color: #72efdd; margin-bottom: 8px; font-size: 0.7rem; text-align: center; text-transform: uppercase; letter-spacing: 1.5px; }
-        .v-box { padding: 10px; border-radius: 6px; margin-bottom: 5px; font-size: 0.8rem; background: #1b263b; border-left: 4px solid #4cc9f0; }
-        .v-box b { color: #4cc9f0; display: block; margin-bottom: 2px; }
-        .number-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin-top: 10px; }
-        .number-btn { aspect-ratio: 1; font-size: 0.8rem; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; color: white; background: #1b263b; border: 1px solid #2c3e50; }
-        .zero { background: #38b000; grid-column: span 12; height: 35px; margin-bottom: 5px; }
-        .active-btn { background: #4361ee !important; transform: scale(0.95); }
-        .input-row { display: flex; gap: 8px; margin: 15px 0; }
-        input { flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #4361ee; background: #1b263b; color: white; }
-        .btn { padding: 10px 15px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; color: white; background: #4361ee; }
-        .history-list { display: flex; flex-wrap: wrap; gap: 4px; flex-direction: row-reverse; justify-content: flex-end; }
-        .hist-chip { background: #1b4965; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+        body { font-family: 'Segoe UI', sans-serif; background: #eef2f3; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 90%; max-width: 800px; background: white; padding: 20px; border-radius: 15px; shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+        .card { padding: 15px; border-radius: 10px; border: 2px solid #ddd; background: #fafafa; }
+        .active-pattern { border-color: #27ae60; background: #edffef; box-shadow: 0 0 10px rgba(39,174,96,0.3); }
+        .ds-badge { background: #34495e; color: white; padding: 3px 8px; border-radius: 5px; font-size: 0.9em; }
+        input { padding: 12px; border-radius: 5px; border: 1px solid #ccc; width: 100px; }
+        button { padding: 12px 20px; background: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .history-bar { margin: 20px 0; padding: 10px; background: #34495e; color: white; border-radius: 5px; width: 100%; overflow-x: auto; }
     </style>
 </head>
 <body>
 
-<div class="main-layout">
-    <div class="side-stats">
-        <div class="section-title">Longest Sleepers</div>
-        <div id="coldListUI"></div>
+<div class="container">
+    <h2>Advanced Terminal DS Predictor</h2>
+    
+    <div style="display: flex; gap: 10px; justify-content: center;">
+        <input type="number" id="spinInput" placeholder="Spin" min="0" max="36">
+        <button onclick="handleSpin()">Track Spin</button>
     </div>
 
-    <div class="container">
-        <header>
-            <h1>AI PATTERN TRIGGERS</h1>
-            <div id="spinCount" style="color:#72efdd; font-size: 0.8rem;">Spins Logged: 0</div>
-        </header>
+    <div class="history-bar" id="history">History: No spins recorded</div>
 
-        <div class="section-title">Targets to Play (Clear on Hit)</div>
-        <div class="trigger-panel" id="triggerPanel"></div>
-
-        <div class="number-grid" id="grid">
-            <button class="number-btn zero" onclick="addNumber(0)">0</button>
+    <div class="grid" id="predictionGrid">
         </div>
-
-        <div class="input-row">
-            <input type="text" id="csvInput" placeholder="Paste history: 10,22,5,1...">
-            <button class="btn" onclick="loadCSV()">Load</button>
-            <button class="btn" style="background:#f72585" onclick="clearData()">Clear</button>
-        </div>
-
-        <div class="section-title">Recent History</div>
-        <div id="historyList" class="history-list"></div>
-    </div>
 </div>
 
 <script>
-    let history = [];
-    let activeTriggers = new Set();
-
-    // Map Definitions
-    const getSplits = (n) => {
-        if (n === 0) return [];
-        let s = [];
-        if (n > 3) s.push(`${n-3}-${n}`);
-        if (n < 34) s.push(`${n}-${n+3}`);
-        if (n % 3 !== 1) s.push(`${n-1}-${n}`);
-        if (n % 3 !== 0) s.push(`${n}-${n+1}`);
-        return s;
+    let spins = [];
+    const terminalMap = {
+        1: [8], 2: [7, 9], 3: [8], 4: [11], 5: [10, 12], 6: [11], 7: [2, 9],
+        8: [1, 3, 13, 15], 9: [2, 14], 10: [5, 17], 11: [4, 6, 16, 18],
+        12: [5, 17], 13: [8, 20], 14: [7, 9, 19, 21], 15: [8, 20], 16: [11, 23],
+        17: [10, 12, 22, 24], 18: [11, 23], 19: [14, 26], 20: [13, 15, 25, 27],
+        21: [14, 26], 22: [17, 29], 23: [16, 18, 28, 30], 24: [17, 29],
+        25: [20, 32], 26: [19, 21, 31, 33], 27: [20, 32], 28: [23, 35],
+        29: [22, 24, 34, 36], 30: [23, 35], 31: [26], 32: [25, 27],
+        33: [26], 34: [29], 35: [28, 30], 36: [29]
     };
 
-    const getCorners = (n) => {
-        if (n === 0) return [];
-        let c = [];
-        let row = Math.floor((n-1)/3);
-        let col = (n-1)%3;
-        if (row > 0 && col > 0) c.push(`${n-4}/${n-3}/${n-1}/${n}`);
-        if (row > 0 && col < 2) c.push(`${n-3}/${n-2}/${n}/${n+1}`);
-        if (row < 11 && col > 0) c.push(`${n-1}/${n}/${n+2}/${n+3}`);
-        if (row < 11 && col < 2) c.push(`${n}/${n+1}/${n+3}/${n+4}`);
-        return c;
-    };
+    function getDS(num) { return num === 0 ? 0 : Math.ceil(num / 6); }
 
-    const getST = (n) => n === 0 ? null : Math.ceil(n/3);
-    const getDS = (n) => n === 0 ? null : Math.ceil(n/6);
-    const getDZ = (n) => n === 0 ? null : Math.ceil(n/12);
-    const getCL = (n) => n === 0 ? null : (n % 3 === 0 ? 3 : n % 3);
-
-    // Calculate "Sleep" (how many spins since last appearance)
-    function getAbsence(arr, target, type) {
-        let count = 0;
-        for (let i = arr.length - 1; i >= 0; i--) {
-            let match = false;
-            let n = arr[i];
-            if (type === 'STR') match = (n == target);
-            else if (type === 'ST') match = (getST(n) == target);
-            else if (type === 'DS') match = (getDS(n) == target);
-            else if (type === 'DZ') match = (getDZ(n) == target);
-            else if (type === 'CL') match = (getCL(n) == target);
-            else if (type === 'SPL') match = getSplits(n).includes(target);
-            else if (type === 'CNR') match = getCorners(n).includes(target);
-            
-            if (match) return count;
-            count++;
-        }
-        return count; // If never hit, return total length
+    function handleSpin() {
+        const val = parseInt(document.getElementById('spinInput').value);
+        if (isNaN(val) || val < 0 || val > 36) return;
+        
+        spins.push(val);
+        document.getElementById('spinInput').value = '';
+        updateUI();
     }
 
-    function addNumber(n) {
-        history.push(n);
-        // Persistence Logic: Remove trigger if hit
-        activeTriggers.forEach(trig => {
-            if (trig.includes(`STR ${n} `)) activeTriggers.delete(trig);
-            if (getST(n) && trig.includes(`ST ${getST(n)} `)) activeTriggers.delete(trig);
-            if (getDS(n) && trig.includes(`DS ${getDS(n)} `)) activeTriggers.delete(trig);
-            if (getDZ(n) && trig.includes(`DZ ${getDZ(n)} `)) activeTriggers.delete(trig);
-            if (getCL(n) && trig.includes(`COL ${getCL(n)} `)) activeTriggers.delete(trig);
-            getSplits(n).forEach(s => { if(trig.includes(`SPL ${s} `)) activeTriggers.delete(trig); });
-            getCorners(n).forEach(c => { if(trig.includes(`CNR ${c} `)) activeTriggers.delete(trig); });
-        });
-        analyze();
-    }
+    function updateUI() {
+        document.getElementById('history').innerText = "History: " + spins.join(" - ");
+        if (spins.length < 2) return;
 
-    function analyze() {
-        if (history.length < 5) return;
+        const last = spins[spins.length - 1];
+        const prev = spins[spins.length - 2];
+        const grid = document.getElementById('predictionGrid');
+        grid.innerHTML = '';
 
-        // Determine "Coldest" by Absence (Sleeper logic)
-        const findSleepers = (pool, type, windowSize, limit) => {
-            let data = history.slice(-windowSize);
-            let results = pool.map(item => ({ item, sleep: getAbsence(data, item, type) }));
-            return results.sort((a,b) => b.sleep - a.sleep).slice(0, limit);
-        };
+        const ops = [
+            { name: "Only (-)", res: Math.abs(last - prev) },
+            { name: "Only (- & -1)", res: Math.abs(last - prev) - 1 },
+            { name: "Only (- & +1)", res: Math.abs(last - prev) + 1 },
+            { name: "Only (+)", res: (last + prev) },
+            { name: "Only (+ & -1)", res: (last + prev) - 1 },
+            { name: "Only (+ & +1)", res: (last + prev) + 1 }
+        ];
 
-        const allNums = Array.from({length: 37}, (_, i) => i);
-        const allST = [1,2,3,4,5,6,7,8,9,10,11,12];
-        const allDS = [1,2,3,4,5,6];
-        const allDZ = [1,2,3];
-        const allCL = [1,2,3];
-        
-        // Generate all possible Splits and Corners for the table
-        let allSplits = [], allCorners = [];
-        allNums.forEach(n => { allSplits.push(...getSplits(n)); allCorners.push(...getCorners(n)); });
-        allSplits = [...new Set(allSplits)];
-        allCorners = [...new Set(allCorners)];
+        ops.forEach(op => {
+            if (op.res > 0 && op.res <= 36) {
+                const terminals = terminalMap[op.res] || [];
+                const streets = [...new Set(terminals.map(t => getDS(t)))];
+                
+                const card = document.createElement('div');
+                card.className = 'card';
+                // Pattern following logic: check if last number was in this prediction
+                if (terminals.includes(last)) card.classList.add('active-pattern');
 
-        const sleepers = {
-            str: findSleepers(allNums, 'STR', history.length, 2),
-            spl: findSleepers(allSplits, 'SPL', history.length, 2),
-            cnr: findSleepers(allCorners, 'CNR', history.length, 2),
-            st:  findSleepers(allST, 'ST', 36, 2),
-            ds:  findSleepers(allDS, 'DS', 21, 2),
-            dz:  findSleepers(allDZ, 'DZ', 14, 1),
-            cl:  findSleepers(allCL, 'CL', 14, 1)
-        };
-
-        // Logic: If current spin IS one of the sleepers, AND it hit previously within short window -> Trigger
-        const lastNum = history[history.length - 1];
-        
-        const checkRepeat = (label, currentVal, sleeperList, min, max) => {
-            if (!currentVal) return;
-            // Is this value currently a 'sleeper'?
-            if (sleeperList.some(s => s.item == currentVal)) {
-                // How many spins ago was the PREVIOUS hit?
-                let lastIdx = -1;
-                for(let i = history.length - 2; i >= 0; i--) {
-                    let prev;
-                    if(label === 'STR') prev = history[i];
-                    else if(label === 'ST') prev = getST(history[i]);
-                    else if(label === 'DS') prev = getDS(history[i]);
-                    else if(label === 'DZ') prev = getDZ(history[i]);
-                    else if(label === 'COL') prev = getCL(history[i]);
-                    else if(label === 'SPL') { if(getSplits(history[i]).includes(currentVal)) prev = currentVal; }
-                    else if(label === 'CNR') { if(getCorners(history[i]).includes(currentVal)) prev = currentVal; }
-
-                    if(prev == currentVal) {
-                        lastIdx = i;
-                        break;
-                    }
-                }
-
-                if (lastIdx !== -1) {
-                    let gap = (history.length - 1) - lastIdx;
-                    if (gap >= min && gap <= max) {
-                        activeTriggers.add(`${label} ${currentVal} (${gap} ago)`);
-                    }
-                }
+                card.innerHTML = `
+                    <strong>${op.name}</strong><br>
+                    Delta: ${op.res}<br>
+                    Terminals: ${terminals.join(', ')}<br>
+                    <div style="margin-top:10px;">
+                        ${streets.map(s => `<span class="ds-badge">DS ${s}</span>`).join(' ')}
+                    </div>
+                `;
+                grid.appendChild(card);
             }
-        };
-
-        checkRepeat('STR', lastNum, sleepers.str, 2, 14);
-        getSplits(lastNum).forEach(s => checkRepeat('SPL', s, sleepers.spl, 2, 14));
-        getCorners(lastNum).forEach(c => checkRepeat('CNR', c, sleepers.cnr, 2, 14));
-        checkRepeat('ST', getST(lastNum), sleepers.st, 2, 6);
-        checkRepeat('DS', getDS(lastNum), sleepers.ds, 2, 6);
-        checkRepeat('DZ', getDZ(lastNum), sleepers.dz, 2, 4);
-        checkRepeat('COL', getCL(lastNum), sleepers.cl, 2, 4);
-
-        updateUI(sleepers);
-    }
-
-    function updateUI(sleepers) {
-        document.getElementById('triggerPanel').innerHTML = Array.from(activeTriggers).map(t => `<div class="trigger-item">${t}</div>`).join('');
-        document.getElementById('spinCount').textContent = `Total History: ${history.length}`;
-        document.getElementById('historyList').innerHTML = history.slice(-20).map(n => `<div class="hist-chip">${n}</div>`).join('');
-        
-        let coldHtml = '';
-        const format = (list) => list.map(s => `${s.item}[${s.sleep}]`).join(', ');
-        
-        coldHtml += `<div class="v-box"><b>STR (Full):</b> ${format(sleepers.str)}</div>`;
-        coldHtml += `<div class="v-box"><b>ST (36):</b> ${format(sleepers.st)}</div>`;
-        coldHtml += `<div class="v-box"><b>DS (21):</b> ${format(sleepers.ds)}</div>`;
-        coldHtml += `<div class="v-box"><b>DZ/CL (14):</b> ${format(sleepers.dz)} | ${format(sleepers.cl)}</div>`;
-        
-        document.getElementById('coldListUI').innerHTML = coldHtml;
-    }
-
-    function loadCSV() {
-        const val = document.getElementById('csvInput').value;
-        val.split(',').forEach(v => {
-            let n = parseInt(v.trim());
-            if (!isNaN(n)) history.push(n);
         });
-        analyze();
-        document.getElementById('csvInput').value = '';
-    }
-
-    function clearData() { history = []; activeTriggers.clear(); analyze(); }
-
-    // Build Grid
-    const grid = document.getElementById('grid');
-    for (let i = 1; i <= 36; i++) {
-        const btn = document.createElement('button');
-        btn.className = `number-btn ${i % 2 === 0 ? 'even' : 'odd'}`;
-        btn.textContent = i;
-        btn.onclick = () => {
-            document.querySelectorAll('.number-btn').forEach(b => b.classList.remove('active-btn'));
-            btn.classList.add('active-btn');
-            addNumber(i);
-        };
-        grid.appendChild(btn);
     }
 </script>
-
 </body>
 </html>
