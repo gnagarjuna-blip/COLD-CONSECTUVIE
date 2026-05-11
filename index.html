@@ -2,212 +2,142 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dealer Signature - Strategy Guide</title>
+    <title>Dealer Signature Predictor</title>
     <style>
-        :root {
-            --primary-gold: #d4af37;
-            --bg-dark: #0a0a0a;
-            --card-bg: #1a1a1a;
-            --text-gray: #cccccc;
-            --win-green: #2ecc71;
-            --loss-red: #e74c3c;
-            --accent-blue: #3498db;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-dark);
-            color: white;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            border-bottom: 2px solid var(--primary-gold);
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        }
-
-        h1, h2, h3 {
-            color: var(--primary-gold);
-            text-transform: uppercase;
-        }
-
-        .section {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border-left: 4px solid var(--primary-gold);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .step-box {
-            background: #252525;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-
-        .highlight {
-            color: var(--primary-gold);
-            font-weight: bold;
-        }
-
-        .stats-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        .stats-table td {
-            padding: 10px;
-            border: 1px solid #333;
-        }
-
-        .win { color: var(--win-green); font-weight: bold; }
-        .loss { color: var(--loss-red); font-weight: bold; }
-
-        .pattern-box {
-            display: flex;
-            gap: 10px;
-            margin: 10px 0;
-            font-family: monospace;
-            font-size: 1.2em;
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            background: #444;
-        }
-
-        .warning {
-            border-left: 4px solid var(--loss-red);
-            background: #2d1a1a;
-        }
-
-        .pro-tip {
-            background: linear-gradient(45deg, #2c3e50, #000000);
-            border: 1px solid var(--primary-gold);
-            padding: 15px;
-            font-style: italic;
-            text-align: center;
-        }
-
-        @media (max-width: 600px) {
-            .grid { grid-template-columns: 1fr; }
-        }
+        :root { --gold: #d4af37; --bg: #0f0f0f; --card: #1a1a1a; --win: #2ecc71; }
+        body { font-family: sans-serif; background: var(--bg); color: #eee; padding: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        .panel { background: var(--card); padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
+        h2 { color: var(--gold); margin-top: 0; border-bottom: 1px solid var(--gold); padding-bottom: 10px; }
+        
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        input { background: #222; border: 1px solid #444; color: white; padding: 10px; border-radius: 4px; flex-grow: 1; }
+        button { background: var(--gold); border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 4px; }
+        
+        .prediction-display { text-align: center; padding: 20px; background: #222; border: 2px dashed var(--gold); }
+        .prediction-number { font-size: 3em; color: var(--win); display: block; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; }
+        .stat-card { background: #252525; padding: 10px; border-radius: 4px; }
+        .history-list { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
+        .num-tag { background: #333; padding: 5px 10px; border-radius: 3px; font-size: 0.8em; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>Dealer Signature</h1>
-        <p>Automatic Prediction System & Strategy Guide</p>
+    <header style="text-align:center">
+        <h1 style="color:var(--gold)">SHADOW ROULETTE ENGINE</h1>
+        <p>Dealer Signature & Phase Tracking</p>
     </header>
 
-    <div class="section">
-        <h2>System Workflow</h2>
-        <div class="step-box">
-            <h3>Step 1: Select a Table</h3>
-            <p>Choose the roulette table you want to analyze. The app will automatically fetch the latest spin results.</p>
+    <div class="panel">
+        <h2>Input Data</h2>
+        <div class="input-group">
+            <input type="text" id="historyInput" placeholder="Paste history (e.g. 32, 15, 19, 4)">
+            <button onclick="loadHistory()">Load History</button>
         </div>
-        <div class="step-box">
-            <h3>Step 2: Automatic Prediction</h3>
-            <p>The system uses pattern recognition and probability to predict the next likely outcome based on recent results.</p>
+        <div class="input-group">
+            <input type="number" id="singleInput" placeholder="New Spin" min="0" max="36">
+            <button onclick="addSingleSpin()">Add Spin</button>
         </div>
-        <div class="step-box">
-            <h3>Step 3: Prediction Format</h3>
-            <p><span class="highlight">Example: 15n9</span> — Bet on number 15 with 9 neighbours on the racetrack.</p>
+        <div id="historyDisplay" class="history-list"></div>
+    </div>
+
+    <div class="panel">
+        <h2>Live Prediction</h2>
+        <div id="predictionBox" class="prediction-display">
+            <span id="predictText">AWAITING DATA...</span>
+            <span id="predictVal" class="prediction-number">--</span>
+            <span id="predictType" style="color:var(--gold)"></span>
         </div>
     </div>
 
-    <div class="section">
-        <h2>Dealer Signature Analysis</h2>
-        <p>Every dealer develops a "signature"—a repeatable rhythm in spin behavior and travel distance. By studying travel behavior, you react to identifiable structures.</p>
-        
-        <div class="grid">
-            <div>
-                <h3>Travel Data Insights</h3>
-                <ul>
-                    <li><strong>Big Travel:</strong> High volatility, large jumps, frequent direction switches.</li>
-                    <li><strong>Small Travel:</strong> Phase keeping, consistent rhythm, higher "near hit" probability.</li>
-                </ul>
+    <div class="panel">
+        <h2>Engine Insights</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div>Travel Dist.</div>
+                <div id="statTravel" style="font-size: 1.5em; color: var(--gold);">0</div>
             </div>
-            <div class="step-box">
-                <span class="highlight">IDEAL ENVIRONMENT:</span><br>
-                Stable small travel with consistent direction.
+            <div class="stat-card">
+                <div>Rhythm</div>
+                <div id="statRhythm" style="font-size: 1.1em;">STABLE</div>
             </div>
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>Pattern Recognition</h2>
-        
-        <h3>Example: The 1-3 Pattern</h3>
-        <div class="pattern-box">
-            <span class="loss">L</span> <span class="win">W</span> <span class="win">W</span> <span class="win">W</span> 
-            <span class="loss">L</span> <span class="win">W</span> <span class="win">W</span> <span class="win">W</span>
-        </div>
-        <p>Prepare to enter after a Loss appears.</p>
-
-        <h3>Trend: Hot Streak</h3>
-        <div class="pattern-box">
-            <span class="win">W</span> <span class="win">W</span> <span class="win">W</span> <span class="loss">L</span> <span class="win">W</span> <span class="win">W</span>
-        </div>
-        <p>Frequent wins with rare losses indicate a trending table. Ride while structure holds.</p>
-    </div>
-
-    <div class="section">
-        <h2>TOP Numbers (Racetrack)</h2>
-        <div class="grid">
-            <div class="step-box">
-                <span class="badge" style="background: var(--accent-blue);">TOP OVER</span>
-                <p>Travel line is <strong>ABOVE</strong> the orange line.<br>
-                Format: <strong>0n4</strong> (Number 0 with 4 neighbors)</p>
-            </div>
-            <div class="step-box">
-                <span class="badge" style="background: #e67e22;">TOP UNDER</span>
-                <p>Travel line is <strong>BELOW</strong> the orange line.<br>
-                Format: <strong>9n4</strong> (Number 9 with 4 neighbors)</p>
+            <div class="stat-card">
+                <div>Phase</div>
+                <div id="statPhase" style="font-size: 1.1em;">NEUTRAL</div>
             </div>
         </div>
     </div>
-
-    <div class="section warning">
-        <h2>🚫 Tables to Avoid</h2>
-        <ul>
-            <li>Inconsistent travel distance (Random jumps)</li>
-            <li>Clustered losses without any rhythm</li>
-            <li>Dealer constantly changing spin strength</li>
-        </ul>
-        <p><strong>RULE:</strong> No structure = No edge.</p>
-    </div>
-
-    <div class="pro-tip">
-        <strong>PRO TIP:</strong> Never chase losses. Wait for a structured opportunity, then execute with discipline. Exit at the first sign of pattern weakening.
-    </div>
-
-    <footer style="text-align: center; margin-top: 40px; color: #555; font-size: 0.8em;">
-        Strategy data provided by @shadow.roulette
-    </footer>
 </div>
+
+<script>
+    // European Wheel Sequence
+    const wheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+    let spins = [];
+
+    function getDistance(n1, n2) {
+        let p1 = wheel.indexOf(parseInt(n1));
+        let p2 = wheel.indexOf(parseInt(n2));
+        let dist = p2 - p1;
+        if (dist < 0) dist += 37;
+        return dist;
+    }
+
+    function updateUI() {
+        const historyDiv = document.getElementById('historyDisplay');
+        historyDiv.innerHTML = spins.slice(-10).map(s => `<span class="num-tag">${s}</span>`).join('');
+
+        if (spins.length < 2) return;
+
+        let last = spins[spins.length - 1];
+        let prev = spins[spins.length - 2];
+        let travel = getDistance(prev, last);
+        
+        document.getElementById('statTravel').innerText = travel;
+
+        // Logic based on Image: "Small Travel usually maintain phase"
+        // If travel is less than 12 pockets, predict the same jump (Phase Keeping)
+        if (travel <= 15) {
+            let nextIndex = (wheel.indexOf(parseInt(last)) + travel) % 37;
+            let predictedNum = wheel[nextIndex];
+            
+            document.getElementById('predictText').innerText = "PREDICTION ACTIVE";
+            document.getElementById('predictVal').innerText = predictedNum + "n9";
+            document.getElementById('predictType').innerText = "PHASE KEEPING (SMALL TRAVEL)";
+            document.getElementById('statRhythm').innerText = "CONSISTENT";
+            document.getElementById('statRhythm').style.color = "var(--win)";
+        } else {
+            document.getElementById('predictText').innerText = "HIGH VOLATILITY";
+            document.getElementById('predictVal').innerText = "WAIT";
+            document.getElementById('predictType').innerText = "Large jump detected - Rhythm unstable";
+            document.getElementById('statRhythm').innerText = "UNSTABLE";
+            document.getElementById('statRhythm').style.color = "#e74c3c";
+        }
+    }
+
+    function addSingleSpin() {
+        let val = document.getElementById('singleInput').value;
+        if (val !== "" && val >= 0 && val <= 36) {
+            spins.push(parseInt(val));
+            document.getElementById('singleInput').value = "";
+            updateUI();
+        }
+    }
+
+    function loadHistory() {
+        let raw = document.getElementById('historyInput').value;
+        let processed = raw.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+        spins = [...spins, ...processed];
+        updateUI();
+    }
+
+    // Allow "Enter" key to add spin
+    document.getElementById('singleInput').addEventListener("keyup", function(event) {
+        if (event.key === "Enter") addSingleSpin();
+    });
+</script>
 
 </body>
 </html>
