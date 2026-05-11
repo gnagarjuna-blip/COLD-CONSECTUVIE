@@ -3,144 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shadow Roulette - Click Interface</title>
+    <title>Shadow Roulette - Pro Signature Engine</title>
     <style>
-        :root { --gold: #d4af37; --bg: #0a0a0a; --card: #161616; --win: #2ecc71; --red: #e74c3c; }
+        :root { --gold: #d4af37; --bg: #0a0a0a; --card: #161616; --win: #2ecc71; --red: #e74c3c; --blue: #3498db; --orange: #ff8c00; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         
-        /* Prediction Header */
-        .prediction-panel { width: 100%; max-width: 800px; background: var(--card); border: 2px solid var(--gold); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
-        .predict-val { font-size: 4em; font-weight: bold; color: var(--win); margin: 10px 0; display: block; }
-        .predict-sub { color: var(--gold); font-weight: bold; letter-spacing: 1px; }
+        /* Layout */
+        .container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 20px; }
+        .grid-main { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
+        .panel { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 20px; }
+        
+        /* Prediction & Top Numbers */
+        .prediction-box { border: 2px solid var(--gold); text-align: center; }
+        .predict-val { font-size: 3rem; font-weight: bold; color: var(--win); display: block; margin: 5px 0; }
+        .top-num-box { background: #222; border-radius: 8px; padding: 10px; margin-top: 10px; display: flex; justify-content: space-around; }
+        .top-item { display: flex; flex-direction: column; align-items: center; }
+        .active-top { border: 2px solid var(--orange); border-radius: 6px; padding: 5px; background: rgba(255, 140, 0, 0.1); }
 
-        /* Roulette Table Grid */
-        .roulette-table { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; background: #000; padding: 10px; border: 2px solid #333; border-radius: 8px; margin-bottom: 20px; width: 100%; max-width: 900px; overflow-x: auto; }
-        .cell { aspect-ratio: 1/1.5; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); font-size: 1.2rem; transition: transform 0.1s; }
-        .cell:hover { transform: scale(1.05); filter: brightness(1.3); }
-        .cell:active { transform: scale(0.95); }
+        /* Roulette Table */
+        .roulette-table { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; background: #000; padding: 10px; border: 2px solid #333; border-radius: 8px; }
+        .cell { aspect-ratio: 1/1.5; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 4px; transition: 0.1s; border: 1px solid rgba(255,255,255,0.05); }
+        .cell:hover { filter: brightness(1.5); transform: scale(1.05); }
         .zero { grid-row: span 3; background: var(--win); color: #000; }
         .red { background: var(--red); }
         .black { background: #222; }
 
-        /* History & Stats */
-        .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; max-width: 800px; margin-bottom: 20px; }
-        .stat-box { background: var(--card); padding: 15px; border-radius: 8px; text-align: center; border-bottom: 3px solid #333; }
-        .history-strip { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 800px; margin-top: 10px; }
-        .hist-chip { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: bold; border: 1px solid #444; }
+        /* Chart Simulation */
+        .chart-container { height: 120px; display: flex; align-items: flex-end; gap: 4px; border-bottom: 2px solid #444; position: relative; margin-top: 10px; padding-bottom: 5px; }
+        .chart-bar { flex: 1; background: var(--blue); transition: height 0.3s; min-width: 15px; }
+        .orange-line { position: absolute; width: 100%; height: 2px; background: var(--orange); bottom: 50%; left: 0; z-index: 10; box-shadow: 0 0 5px var(--orange); }
 
-        .label { display: block; font-size: 0.7em; color: #888; text-transform: uppercase; margin-bottom: 5px; }
+        /* History & Utils */
+        .history-strip { display: flex; gap: 5px; overflow-x: auto; padding: 10px; border-top: 1px solid #333; }
+        .chip { min-width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; }
+        .label { font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 1px; display: block; }
+        textarea { background: #111; border: 1px solid #444; color: var(--gold); padding: 10px; border-radius: 8px; height: 60px; width: 100%; box-sizing: border-box; }
+        button { background: var(--gold); border: none; padding: 8px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 5px; width: 100%; }
     </style>
 </head>
 <body>
 
-    <div class="prediction-panel">
-        <span class="label">Next Prediction</span>
-        <span id="predictVal" class="predict-val">--</span>
-        <span id="predictType" class="predict-sub">WAITING FOR SPINS...</span>
-    </div>
+<div class="container">
+    <div class="grid-main">
+        <div class="panel prediction-box">
+            <span class="label">Main Prediction (n9)</span>
+            <span id="predictVal" class="predict-val">--</span>
+            
+            <div class="top-num-box">
+                <div class="top-item" id="boxOver">
+                    <span class="label">TOP (OVER)</span>
+                    <span id="valOver" style="font-weight:bold; color:var(--orange)">--</span>
+                </div>
+                <div class="top-item" id="boxUnder">
+                    <span class="label">TOP (UNDER)</span>
+                    <span id="valUnder" style="font-weight:bold; color:var(--blue)">--</span>
+                </div>
+            </div>
 
-    <div class="stats-bar">
-        <div class="stat-box">
-            <span class="label">Travel Distance</span>
-            <span id="distVal" style="font-size: 1.5em; color: var(--gold);">0</span>
+            <div class="chart-container" id="chartContainer">
+                <div class="orange-line" id="orangeLine"></div>
+                </div>
+            <span class="label" style="margin-top:5px;">Travel Data Chart (Orange = Median)</span>
         </div>
-        <div class="stat-box">
-            <span class="label">Structure</span>
-            <span id="structVal" style="color: var(--win);">STABLE</span>
-        </div>
-        <div class="stat-box">
-            <span class="label">Last Hit</span>
-            <span id="lastVal" style="font-size: 1.5em;">--</span>
+
+        <div class="panel">
+            <span class="label">Structure Momentum</span>
+            <div id="momentumText" style="padding:4px 8px; border-radius:4px; font-weight:bold; margin:5px 0; display:inline-block; background:#333;">NEUTRAL</div>
+            
+            <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
+            
+            <span class="label">Bulk Import</span>
+            <textarea id="bulkInput" placeholder="Paste: 5, 12, 3..."></textarea>
+            <button onclick="importHistory()">Sync Data</button>
         </div>
     </div>
 
     <div class="roulette-table" id="rouletteTable">
         <div class="cell zero" onclick="addSpin(0)">0</div>
-        </div>
+    </div>
 
     <div class="history-strip" id="historyStrip"></div>
+</div>
 
-    <script>
-        const wheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-        const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-        let spins = [];
+<script>
+    const wheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+    const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    let spins = [];
+    let travelHistory = [];
+    let winLoss = [];
 
-        // Generate Table Layout (3 columns, numbers in order)
-        const table = document.getElementById('rouletteTable');
-        for (let i = 1; i <= 36; i++) {
-            const colorClass = redNumbers.includes(i) ? 'red' : 'black';
-            const cell = document.createElement('div');
-            cell.className = `cell ${colorClass}`;
-            cell.innerText = i;
-            cell.onclick = () => addSpin(i);
-            
-            // Re-ordering logic for the grid to look like a standard table
-            // 3 rows: [3,6,9...], [2,5,8...], [1,4,7...]
-            if (i % 3 === 0) cell.style.gridRow = "1";
-            if (i % 3 === 2) cell.style.gridRow = "2";
-            if (i % 3 === 1) cell.style.gridRow = "3";
-            
-            table.appendChild(cell);
+    // Table Generation
+    const table = document.getElementById('rouletteTable');
+    for (let i = 1; i <= 36; i++) {
+        const cell = document.createElement('div');
+        cell.className = `cell ${redNumbers.includes(i) ? 'red' : 'black'}`;
+        cell.innerText = i;
+        cell.onclick = () => addSpin(i);
+        if (i % 3 === 0) cell.style.gridRow = "1";
+        if (i % 3 === 2) cell.style.gridRow = "2";
+        if (i % 3 === 1) cell.style.gridRow = "3";
+        table.appendChild(cell);
+    }
+
+    function addSpin(num) {
+        checkWin(num);
+        spins.push(num);
+        updateEngine();
+    }
+
+    function importHistory() {
+        const val = document.getElementById('bulkInput').value;
+        const nums = val.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
+        nums.forEach(n => addSpin(n));
+        document.getElementById('bulkInput').value = "";
+    }
+
+    function updateEngine() {
+        if (spins.length < 2) return;
+
+        const last = spins[spins.length-1];
+        const prev = spins[spins.length-2];
+        let travel = wheel.indexOf(last) - wheel.indexOf(prev);
+        if (travel < 0) travel += 37;
+        
+        travelHistory.push(travel);
+        if (travelHistory.length > 15) travelHistory.shift();
+
+        // Calculate Median for Orange Reference Line
+        const median = travelHistory.reduce((a,b) => a+b, 0) / travelHistory.length;
+        const orangePos = (median / 37) * 100;
+        document.getElementById('orangeLine').style.bottom = orangePos + "%";
+
+        // Main Prediction Logic
+        if (travel <= 14) {
+            const pred = wheel[(wheel.indexOf(last) + travel) % 37];
+            document.getElementById('predictVal').innerText = pred + "n9";
+            document.getElementById('predictVal').style.color = "var(--win)";
+        } else {
+            document.getElementById('predictVal').innerText = "WAIT";
+            document.getElementById('predictVal').style.color = "var(--red)";
         }
 
-        function addSpin(num) {
-            spins.push(num);
-            processData();
+        // TOP NUMBERS Logic
+        const topOverNum = wheel[(wheel.indexOf(last) + Math.round(median + 5)) % 37];
+        const topUnderNum = wheel[(wheel.indexOf(last) + Math.round(median - 5)) % 37];
+        
+        document.getElementById('valOver').innerText = topOverNum + "n4";
+        document.getElementById('valUnder').innerText = topUnderNum + "n4";
+
+        // Highlight TOP based on Chart position
+        if (travel > median) {
+            document.getElementById('boxOver').className = "top-item active-top";
+            document.getElementById('boxUnder').className = "top-item";
+        } else {
+            document.getElementById('boxUnder').className = "top-item active-top";
+            document.getElementById('boxOver').className = "top-item";
         }
 
-        function processData() {
-            if (spins.length < 1) return;
-            
-            const last = spins[spins.length - 1];
-            document.getElementById('lastVal').innerText = last;
-            updateHistory();
+        renderChart();
+        renderHistory();
+        updateMomentum();
+    }
 
-            if (spins.length < 2) return;
+    function renderChart() {
+        const container = document.getElementById('chartContainer');
+        // Remove old bars
+        container.querySelectorAll('.chart-bar').forEach(b => b.remove());
+        travelHistory.forEach(t => {
+            const bar = document.createElement('div');
+            bar.className = 'chart-bar';
+            bar.style.height = (t / 37 * 100) + "%";
+            container.appendChild(bar);
+        });
+    }
 
-            const prev = spins[spins.length - 2];
-            const travel = calculateDistance(prev, last);
-            
-            document.getElementById('distVal').innerText = travel;
+    function checkWin(actual) {
+        const currentPred = document.getElementById('predictVal').innerText;
+        if (currentPred === "--" || currentPred === "WAIT") return;
+        const target = parseInt(currentPred);
+        const dist = Math.abs(wheel.indexOf(target) - wheel.indexOf(actual));
+        winLoss.push(dist <= 4 ? 'W' : 'L');
+        if (winLoss.length > 10) winLoss.shift();
+    }
 
-            // STRATEGY LOGIC:
-            // "Small Travel = Phase Keeping (Stable)"
-            // "Big Travel = Direction Switches (Volatility)"
-            if (travel <= 12) {
-                let targetIndex = (wheel.indexOf(last) + travel) % 37;
-                let prediction = wheel[targetIndex];
-                
-                document.getElementById('predictVal').innerText = prediction + "n9";
-                document.getElementById('predictType').innerText = "STABLE PHASE: BET NEIGHBORS";
-                document.getElementById('structVal').innerText = "STABLE";
-                document.getElementById('structVal').style.color = "var(--win)";
-            } else {
-                document.getElementById('predictVal').innerText = "WAIT";
-                document.getElementById('predictType').innerText = "HIGH VOLATILITY DETECTED";
-                document.getElementById('structVal').innerText = "RANDOM";
-                document.getElementById('structVal').style.color = "var(--red)";
-            }
-        }
+    function updateMomentum() {
+        const m = document.getElementById('momentumText');
+        const streak = winLoss.slice(-3).join('');
+        if (streak === "WWW") { m.innerText = "HOT STREAK"; m.style.background = "var(--win)"; }
+        else if (winLoss.slice(-2).join('') === "LL") { m.innerText = "WEAKENING"; m.style.background = "var(--red)"; }
+        else { m.innerText = "STABLE"; m.style.background = "var(--blue)"; }
+    }
 
-        function calculateDistance(n1, n2) {
-            let p1 = wheel.indexOf(n1);
-            let p2 = wheel.indexOf(n2);
-            let d = p2 - p1;
-            return d < 0 ? d + 37 : d;
-        }
-
-        function updateHistory() {
-            const strip = document.getElementById('historyStrip');
-            const lastNum = spins[spins.length-1];
-            const color = lastNum === 0 ? 'var(--win)' : (redNumbers.includes(lastNum) ? 'var(--red)' : '#222');
-            
-            const chip = document.createElement('div');
-            chip.className = 'hist-chip';
-            chip.style.backgroundColor = color;
-            chip.innerText = lastNum;
-            
-            strip.prepend(chip);
-            if (strip.children.length > 15) strip.lastChild.remove();
-        }
-    </script>
+    function renderHistory() {
+        const strip = document.getElementById('historyStrip');
+        strip.innerHTML = spins.slice(-20).reverse().map(n => {
+            const c = n === 0 ? 'var(--win)' : (redNumbers.includes(n) ? 'var(--red)' : '#222');
+            return `<div class="chip" style="background:${c}">${n}</div>`;
+        }).join('');
+    }
+</script>
 </body>
 </html>
