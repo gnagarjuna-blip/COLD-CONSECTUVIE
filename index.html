@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shadow Pro - Signature Master Engine</title>
+    <title>Shadow Pro - Single Number Engine</title>
     <style>
         :root { --gold: #d4af37; --bg: #0a0a0a; --card: #161616; --win: #2ecc71; --red: #e74c3c; --blue: #3498db; --orange: #ff8c00; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
@@ -11,20 +11,17 @@
         .container { width: 100%; max-width: 1100px; display: grid; grid-template-columns: 1fr 350px; gap: 15px; }
         .panel { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         
-        /* Prediction Area */
-        .prediction-box { text-align: center; border: 2px solid var(--gold); background: radial-gradient(circle at top, #222, #161616); }
-        .predict-val { font-size: 5rem; font-weight: bold; color: var(--win); text-shadow: 0 0 20px rgba(46, 204, 113, 0.4); line-height: 1; }
-        .format-tag { color: var(--gold); font-size: 1.2rem; font-weight: bold; letter-spacing: 2px; }
+        /* Single Number Prediction Area */
+        .prediction-box { text-align: center; border: 2px solid var(--gold); background: radial-gradient(circle at top, #222, #161616); position: relative; }
+        .predict-val { font-size: 6rem; font-weight: bold; color: var(--win); text-shadow: 0 0 30px rgba(46, 204, 113, 0.5); line-height: 1; margin: 10px 0; }
+        .format-tag { color: var(--gold); font-size: 1rem; font-weight: bold; letter-spacing: 3px; text-transform: uppercase; }
 
         /* Stats & Trackers */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .stat-item { background: #222; padding: 10px; border-radius: 8px; text-align: center; }
         .label { font-size: 0.7rem; color: #888; text-transform: uppercase; margin-bottom: 5px; display: block; }
         
-        .danger-zone { border: 1px solid var(--red); color: var(--red); }
-        .safe-zone { border: 1px solid var(--win); color: var(--win); }
-
-        /* Table */
+        /* Roulette Table */
         .roulette-table { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; background: #000; padding: 10px; border: 2px solid #333; border-radius: 8px; margin-top: 15px; }
         .cell { aspect-ratio: 1/1.4; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); font-size: 1.1rem; }
         .cell:hover { filter: brightness(1.5); background: #333; }
@@ -32,15 +29,19 @@
         .red { background: var(--red); }
         .black { background: #222; }
 
-        /* Log & Pattern */
-        .log-container { height: 250px; overflow-y: auto; background: #000; border: 1px solid #222; border-radius: 8px; padding: 10px; font-family: monospace; }
-        .log-entry { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #111; font-size: 0.9rem; }
+        /* Win/Loss Log */
+        .log-container { height: 300px; overflow-y: auto; background: #000; border: 1px solid #222; border-radius: 8px; padding: 10px; font-family: 'Courier New', Courier, monospace; }
+        .log-entry { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #111; font-size: 0.9rem; }
         
         .history-strip { display: flex; gap: 5px; overflow-x: auto; padding: 15px 0; width: 100%; max-width: 1100px; }
         .chip { min-width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
 
         textarea { width: 100%; background: #111; color: var(--gold); border: 1px solid #444; border-radius: 8px; padding: 10px; height: 50px; margin-bottom: 10px; box-sizing: border-box; }
-        button { background: var(--gold); color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; }
+        button { background: var(--gold); color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; }
+        button:hover { background: #fff; }
+
+        .hit-flash { animation: flash 0.5s infinite; }
+        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -48,18 +49,18 @@
 <div class="container">
     <div>
         <div class="panel prediction-box">
-            <span class="label" id="logicStatus">Analyzing Dealer Signature...</span>
-            <span id="predictVal" class="predict-val">--</span>
-            <div id="predictFormat" class="format-tag">AWAITING DATA</div>
+            <span class="label" id="logicStatus">Dealer Signature Analysis</span>
+            <div id="predictVal" class="predict-val">--</div>
+            <div id="predictFormat" class="format-tag">Target Number Only</div>
             
             <div class="stats-grid">
                 <div class="stat-item">
-                    <span class="label">Top (Over/Under)</span>
+                    <span class="label">Top Numbers Logic</span>
                     <b id="topHint" style="color:var(--orange)">--</b>
                 </div>
                 <div class="stat-item">
-                    <span class="label">Structure Rhythm</span>
-                    <b id="rhythmHint">STABLE</b>
+                    <span class="label">Rhythm Status</span>
+                    <b id="rhythmHint">INITIALIZING</b>
                 </div>
             </div>
         </div>
@@ -71,31 +72,30 @@
         <div class="history-strip" id="historyStrip"></div>
         
         <div class="panel">
-            <span class="label">Paste Table History</span>
-            <textarea id="importArea" placeholder="e.g. 5, 32, 11, 0, 24..."></textarea>
-            <button onclick="bulkImport()">Inject History & Sync Engine</button>
+            <span class="label">Bulk Import Results</span>
+            <textarea id="importArea" placeholder="Paste: 5, 20, 32, 1..."></textarea>
+            <button onclick="bulkImport()">Sync Prediction Engine</button>
         </div>
     </div>
 
     <div class="panel">
-        <span class="label">Max Loss Streak Tracking</span>
-        <div id="streakBox" class="stat-item safe-zone" style="font-size: 1.5rem; margin-bottom: 15px;">
+        <span class="label">Streak Monitor</span>
+        <div id="streakBox" class="stat-item" style="border: 1px solid #333; margin-bottom: 15px;">
             <span class="label">Current Loss Streak</span>
-            <span id="lossStreak">0</span> / 4
+            <span id="lossStreak" style="font-size: 1.8rem; font-weight: bold;">0</span>
+            <div style="font-size: 0.6rem; color: #666; margin-top: 5px;">MAX STREAK ALLOWED: 4</div>
         </div>
 
-        <span class="label">Pattern Sequence Log</span>
-        <div class="log-container" id="log">
-            <div style="color:#555; text-align:center; padding-top:20px;">No Data Tracked</div>
-        </div>
+        <span class="label">Direct Hit Log</span>
+        <div class="log-container" id="log"></div>
 
         <div class="stats-grid" style="margin-top:15px;">
             <div class="stat-item">
-                <span class="label">Win Rate</span>
+                <span class="label">Exact Win Rate</span>
                 <b id="winRate" style="color:var(--win)">0%</b>
             </div>
             <div class="stat-item">
-                <span class="label">Travel Avg</span>
+                <span class="label">Avg Travel</span>
                 <b id="avgTravel">0</b>
             </div>
         </div>
@@ -106,13 +106,12 @@
     const wheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const redNums = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     let spins = [];
-    let travelLog = [];
-    let wlLog = []; 
+    let travelHistory = [];
+    let wlHistory = []; 
     let currentLossStreak = 0;
-    let maxLossObserved = 0;
-    let lastPrediction = null;
+    let lastTarget = null;
 
-    // Build Table
+    // Table Generation
     const table = document.getElementById('rouletteTable');
     for(let i=1; i<=36; i++){
         const c = document.createElement('div');
@@ -126,112 +125,93 @@
     }
 
     function addSpin(num) {
-        if(lastPrediction) checkResult(num);
-        spins.push(num);
-        if(spins.length > 1) {
-            let t = wheel.indexOf(num) - wheel.indexOf(spins[spins.length-2]);
-            if(t < 0) t += 37;
-            travelLog.push(t);
+        // Evaluate the Single Number Prediction against the actual outcome
+        if(lastTarget !== null) {
+            const isExactHit = (num === lastTarget);
+            wlHistory.push(isExactHit ? 'W' : 'L');
+            
+            if(!isExactHit) {
+                currentLossStreak++;
+            } else {
+                currentLossStreak = 0;
+            }
+            
+            logResult(num, lastTarget, isExactHit);
         }
-        runMasterLogic();
-        updateUI();
+
+        spins.push(num);
+        
+        // Calculate Distance Travelled
+        if(spins.length > 1) {
+            let dist = wheel.indexOf(num) - wheel.indexOf(spins[spins.length-2]);
+            if(dist < 0) dist += 37;
+            travelHistory.push(dist);
+        }
+
+        calculateSignature();
+        updateDisplay();
     }
 
-    function checkResult(num) {
-        const pIdx = wheel.indexOf(lastPrediction);
-        const aIdx = wheel.indexOf(num);
-        let diff = Math.abs(pIdx - aIdx);
-        if(diff > 18) diff = 37 - diff;
-        
-        const isWin = diff <= 4; // Strict n4 rule
-        wlLog.push(isWin ? 'W' : 'L');
-
-        if(!isWin) {
-            currentLossStreak++;
-            if(currentLossStreak > maxLossObserved) maxLossObserved = currentLossStreak;
-        } else {
-            currentLossStreak = 0;
-        }
-
-        // Log entry
+    function logResult(actual, target, hit) {
         const log = document.getElementById('log');
-        if(wlLog.length === 1) log.innerHTML = "";
         const entry = document.createElement('div');
         entry.className = 'log-entry';
-        entry.innerHTML = `<span>Spin #${spins.length}: <b>${num}</b></span> 
-                           <b style="color:${isWin?'var(--win)':'var(--red)'}">${isWin?'HIT ✅':'MISS ❌'}</b>`;
+        entry.innerHTML = `<span>Spin #${spins.length + 1}: <b>${actual}</b></span> 
+                           <span style="color:${hit ? 'var(--win)' : 'var(--red)'}">${hit ? 'DIRECT HIT ✅' : 'MISS ('+target+') ❌'}</span>`;
         log.prepend(entry);
     }
 
-    function runMasterLogic() {
-        if(spins.length < 3) return;
+    function calculateSignature() {
+        if(spins.length < 3 || currentLossStreak >= 4) {
+            lastTarget = null;
+            return;
+        }
 
-        const lastT = travelLog[travelLog.length-1];
-        const avgT = travelLog.slice(-5).reduce((a,b)=>a+b,0) / 5;
+        const lastT = travelHistory[travelHistory.history - 1] || travelHistory[0];
+        const avgT = travelHistory.slice(-5).reduce((a,b)=>a+b,0) / travelHistory.slice(-5).length;
         const lastNum = spins[spins.length-1];
+
+        // LOGIC: Signature is a blend of immediate rhythm and historical trend
+        let signatureJump = Math.round((lastT * 0.8) + (avgT * 0.2));
         
-        // 1. SIGNATURE INTERPRETATION
-        // Blending Distance + Trend (Orange Line Concept)
-        let signatureDistance = Math.round((lastT * 0.7) + (avgT * 0.3));
-        let targetNum = wheel[(wheel.indexOf(lastNum) + signatureDistance) % 37];
+        // Final Single Number Target
+        lastTarget = wheel[(wheel.indexOf(lastNum) + signatureJump) % 37];
         
-        // 2. PATTERN FILTERING
-        let status = "Analyzing...";
-        let showPrediction = true;
-
-        if(currentLossStreak >= 4) {
-            status = "DANGER: PATTERN BROKEN";
-            showPrediction = false;
-        } else if (lastT > 20) {
-            status = "VOLATILE JUMP: WAITING";
-            showPrediction = false;
-        } else if (wlLog[wlLog.length-1] === 'L') {
-            status = "RECOVERY STRUCTURE (L → W)";
-        } else if (wlLog.slice(-3).join('') === 'WWW') {
-            status = "HOT STREAK MOMENTUM";
-        }
-
-        // 3. TOP NUMBERS LOGIC
-        const over = wheel[(wheel.indexOf(lastNum) + Math.round(avgT + 4)) % 37];
-        const under = wheel[(wheel.indexOf(lastNum) + Math.round(avgT - 4)) % 37];
-
-        if(showPrediction) {
-            document.getElementById('predictVal').innerText = targetNum;
-            document.getElementById('predictFormat').innerText = targetNum + "n4";
-            document.getElementById('logicStatus').innerText = status;
-            lastPrediction = targetNum;
-        } else {
-            document.getElementById('predictVal').innerText = "WAIT";
-            document.getElementById('predictFormat').innerText = "NO STRUCTURE";
-            document.getElementById('logicStatus').innerText = status;
-            lastPrediction = null;
-        }
-
-        document.getElementById('topHint').innerText = lastT > avgT ? `OVER: ${over}` : `UNDER: ${under}`;
-        document.getElementById('avgTravel').innerText = Math.round(avgT);
-        document.getElementById('rhythmHint').innerText = lastT <= 15 ? "STABLE" : "UNSTABLE";
-        document.getElementById('rhythmHint').style.color = lastT <= 15 ? "var(--win)" : "var(--red)";
+        // Trend Analysis
+        document.getElementById('topHint').innerText = lastT > avgT ? `Trend: Over (${lastTarget})` : `Trend: Under (${lastTarget})`;
     }
 
-    function updateUI() {
-        // Streak UI
-        const streakEl = document.getElementById('lossStreak');
-        const streakBox = document.getElementById('streakBox');
-        streakEl.innerText = currentLossStreak;
-        if(currentLossStreak >= 3) {
-            streakBox.className = "stat-item danger-zone";
+    function updateDisplay() {
+        const display = document.getElementById('predictVal');
+        const status = document.getElementById('logicStatus');
+
+        if(currentLossStreak >= 4) {
+            display.innerText = "WAIT";
+            display.style.color = "var(--red)";
+            status.innerText = "STRUCTURE BROKEN - WAIT FOR RESET";
+        } else if(lastTarget !== null) {
+            display.innerText = lastTarget;
+            display.style.color = "var(--win)";
+            status.innerText = "IDENTIFIED SIGNATURE DETECTED";
         } else {
-            streakBox.className = "stat-item safe-zone";
+            display.innerText = "--";
+            status.innerText = "COLLECTING RHYTHM DATA...";
         }
 
-        // Win Rate
-        const wins = wlLog.filter(x=>x==='W').length;
-        const rate = wlLog.length > 0 ? Math.round((wins/wlLog.length)*100) : 0;
-        document.getElementById('winRate').innerText = rate + "%";
+        // Stats
+        document.getElementById('lossStreak').innerText = currentLossStreak;
+        document.getElementById('lossStreak').style.color = currentLossStreak >= 3 ? "var(--red)" : "white";
+        
+        const wins = wlHistory.filter(x=>x==='W').length;
+        document.getElementById('winRate').innerText = wlHistory.length > 0 ? Math.round((wins/wlHistory.length)*100) + "%" : "0%";
+        
+        const avg = travelHistory.length > 0 ? Math.round(travelHistory.reduce((a,b)=>a+b,0)/travelHistory.length) : 0;
+        document.getElementById('avgTravel').innerText = avg;
+        document.getElementById('rhythmHint').innerText = (travelHistory[travelHistory.length-1] <= 15) ? "STABLE" : "VOLATILE";
 
         // History
         const strip = document.getElementById('historyStrip');
-        strip.innerHTML = spins.slice(-25).reverse().map(n => {
+        strip.innerHTML = spins.slice(-20).reverse().map(n => {
             const c = n === 0 ? 'var(--win)' : (redNums.includes(n) ? 'var(--red)' : '#222');
             return `<div class="chip" style="background:${c}">${n}</div>`;
         }).join('');
