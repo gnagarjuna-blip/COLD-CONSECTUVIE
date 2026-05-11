@@ -3,65 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shadow Pro - Single Number Engine</title>
+    <title>Shadow Pro - Master Single Engine</title>
     <style>
-        :root { --gold: #d4af37; --bg: #0a0a0a; --card: #161616; --win: #2ecc71; --red: #e74c3c; --blue: #3498db; --orange: #ff8c00; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        :root { --gold: #d4af37; --bg: #0a0a0a; --card: #161616; --win: #2ecc71; --red: #e74c3c; --orange: #ff8c00; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
+        .panel { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 15px; }
         
-        .container { width: 100%; max-width: 1100px; display: grid; grid-template-columns: 1fr 350px; gap: 15px; }
-        .panel { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        
-        /* Single Number Prediction Area */
-        .prediction-box { text-align: center; border: 2px solid var(--gold); background: radial-gradient(circle at top, #222, #161616); position: relative; }
-        .predict-val { font-size: 6rem; font-weight: bold; color: var(--win); text-shadow: 0 0 30px rgba(46, 204, 113, 0.5); line-height: 1; margin: 10px 0; }
-        .format-tag { color: var(--gold); font-size: 1rem; font-weight: bold; letter-spacing: 3px; text-transform: uppercase; }
+        /* Prediction Header */
+        .prediction-header { text-align: center; border: 2px solid var(--gold); background: #111; margin-bottom: 10px; padding: 10px; }
+        .big-num { font-size: 5.5rem; font-weight: bold; color: var(--win); line-height: 1; margin: 10px 0; }
+        .sub-text { font-size: 0.8rem; letter-spacing: 2px; color: var(--gold); font-weight: bold; }
 
-        /* Stats & Trackers */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .stat-item { background: #222; padding: 10px; border-radius: 8px; text-align: center; }
-        .label { font-size: 0.7rem; color: #888; text-transform: uppercase; margin-bottom: 5px; display: block; }
-        
-        /* Roulette Table */
-        .roulette-table { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; background: #000; padding: 10px; border: 2px solid #333; border-radius: 8px; margin-top: 15px; }
-        .cell { aspect-ratio: 1/1.4; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); font-size: 1.1rem; }
-        .cell:hover { filter: brightness(1.5); background: #333; }
+        /* Stats Bar */
+        .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .stat-item { background: #222; padding: 8px; border-radius: 6px; text-align: center; border-bottom: 2px solid #444; }
+        .label { font-size: 0.6rem; color: #888; text-transform: uppercase; margin-bottom: 3px; display: block; }
+
+        /* Table Grid */
+        .roulette-table { display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; background: #000; padding: 8px; border-radius: 8px; border: 1px solid #333; }
+        .cell { aspect-ratio: 1/1.4; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 3px; border: 1px solid rgba(255,255,255,0.03); font-size: 1rem; }
+        .cell:hover { background: #333; transform: scale(1.02); }
         .zero { grid-row: span 3; background: var(--win); color: #000; }
         .red { background: var(--red); }
         .black { background: #222; }
 
-        /* Win/Loss Log */
-        .log-container { height: 300px; overflow-y: auto; background: #000; border: 1px solid #222; border-radius: 8px; padding: 10px; font-family: 'Courier New', Courier, monospace; }
-        .log-entry { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #111; font-size: 0.9rem; }
+        /* Log & Pattern */
+        .log-box { height: 350px; overflow-y: auto; background: #000; padding: 10px; border-radius: 8px; font-family: monospace; border: 1px solid #222; }
+        .log-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #111; font-size: 0.8rem; }
         
-        .history-strip { display: flex; gap: 5px; overflow-x: auto; padding: 15px 0; width: 100%; max-width: 1100px; }
-        .chip { min-width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
-
-        textarea { width: 100%; background: #111; color: var(--gold); border: 1px solid #444; border-radius: 8px; padding: 10px; height: 50px; margin-bottom: 10px; box-sizing: border-box; }
-        button { background: var(--gold); color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; }
-        button:hover { background: #fff; }
-
-        .hit-flash { animation: flash 0.5s infinite; }
-        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        textarea { width: 100%; background: #000; color: var(--gold); border: 1px solid #444; padding: 10px; border-radius: 6px; height: 60px; box-sizing: border-box; }
+        button { width: 100%; background: var(--gold); border: none; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; }
+        .history-strip { display: flex; gap: 4px; overflow-x: auto; margin-top: 10px; padding: 5px 0; }
+        .chip { min-width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div>
-        <div class="panel prediction-box">
-            <span class="label" id="logicStatus">Dealer Signature Analysis</span>
-            <div id="predictVal" class="predict-val">--</div>
-            <div id="predictFormat" class="format-tag">Target Number Only</div>
-            
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="label">Top Numbers Logic</span>
-                    <b id="topHint" style="color:var(--orange)">--</b>
-                </div>
-                <div class="stat-item">
-                    <span class="label">Rhythm Status</span>
-                    <b id="rhythmHint">INITIALIZING</b>
-                </div>
+        <div class="panel prediction-header">
+            <span class="label">Primary Signature Target</span>
+            <div id="bigNum" class="big-num">--</div>
+            <div id="logicNote" class="sub-text">Awaiting Signature Data</div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="label">Orange Line Ref</span>
+                <b id="refLine" style="color:var(--orange)">0.00</b>
+            </div>
+            <div class="stat-item">
+                <span class="label">Avg Travel</span>
+                <b id="avgTravel">0</b>
+            </div>
+            <div class="stat-item">
+                <span class="label">Rhythm</span>
+                <b id="rhythmText">NONE</b>
             </div>
         </div>
 
@@ -70,34 +68,19 @@
         </div>
 
         <div class="history-strip" id="historyStrip"></div>
-        
-        <div class="panel">
-            <span class="label">Bulk Import Results</span>
-            <textarea id="importArea" placeholder="Paste: 5, 20, 32, 1..."></textarea>
-            <button onclick="bulkImport()">Sync Prediction Engine</button>
-        </div>
     </div>
 
-    <div class="panel">
-        <span class="label">Streak Monitor</span>
-        <div id="streakBox" class="stat-item" style="border: 1px solid #333; margin-bottom: 15px;">
-            <span class="label">Current Loss Streak</span>
-            <span id="lossStreak" style="font-size: 1.8rem; font-weight: bold;">0</span>
-            <div style="font-size: 0.6rem; color: #666; margin-top: 5px;">MAX STREAK ALLOWED: 4</div>
+    <div>
+        <div class="panel">
+            <span class="label">Direct Hit Performance</span>
+            <div id="winRate" style="font-size: 2rem; font-weight: bold; color: var(--win);">0%</div>
+            <div class="log-box" id="logBox"></div>
         </div>
 
-        <span class="label">Direct Hit Log</span>
-        <div class="log-container" id="log"></div>
-
-        <div class="stats-grid" style="margin-top:15px;">
-            <div class="stat-item">
-                <span class="label">Exact Win Rate</span>
-                <b id="winRate" style="color:var(--win)">0%</b>
-            </div>
-            <div class="stat-item">
-                <span class="label">Avg Travel</span>
-                <b id="avgTravel">0</b>
-            </div>
+        <div class="panel" style="margin-top: 15px;">
+            <span class="label">Bulk Data Paste</span>
+            <textarea id="bulkPaste" placeholder="e.g. 5, 20, 15, 32, 0..."></textarea>
+            <button onclick="importData()">Calculate from Data</button>
         </div>
     </div>
 </div>
@@ -106,12 +89,11 @@
     const wheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const redNums = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     let spins = [];
-    let travelHistory = [];
-    let wlHistory = []; 
-    let currentLossStreak = 0;
-    let lastTarget = null;
+    let travelLog = [];
+    let wlLog = [];
+    let currentTarget = null;
 
-    // Table Generation
+    // Table
     const table = document.getElementById('rouletteTable');
     for(let i=1; i<=36; i++){
         const c = document.createElement('div');
@@ -125,103 +107,71 @@
     }
 
     function addSpin(num) {
-        // Evaluate the Single Number Prediction against the actual outcome
-        if(lastTarget !== null) {
-            const isExactHit = (num === lastTarget);
-            wlHistory.push(isExactHit ? 'W' : 'L');
-            
-            if(!isExactHit) {
-                currentLossStreak++;
-            } else {
-                currentLossStreak = 0;
-            }
-            
-            logResult(num, lastTarget, isExactHit);
+        if(currentTarget !== null) {
+            const isHit = (num === currentTarget);
+            wlLog.push(isHit ? 'W' : 'L');
+            updateLog(num, currentTarget, isHit);
         }
-
-        spins.push(num);
         
-        // Calculate Distance Travelled
+        spins.push(num);
         if(spins.length > 1) {
             let dist = wheel.indexOf(num) - wheel.indexOf(spins[spins.length-2]);
             if(dist < 0) dist += 37;
-            travelHistory.push(dist);
+            travelLog.push(dist);
         }
-
-        calculateSignature();
-        updateDisplay();
+        
+        processEngine();
+        updateUI();
     }
 
-    function logResult(actual, target, hit) {
-        const log = document.getElementById('log');
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        entry.innerHTML = `<span>Spin #${spins.length + 1}: <b>${actual}</b></span> 
-                           <span style="color:${hit ? 'var(--win)' : 'var(--red)'}">${hit ? 'DIRECT HIT ✅' : 'MISS ('+target+') ❌'}</span>`;
-        log.prepend(entry);
-    }
+    function processEngine() {
+        if(spins.length < 3) return;
 
-    function calculateSignature() {
-        if(spins.length < 3 || currentLossStreak >= 4) {
-            lastTarget = null;
-            return;
-        }
+        // Orange Line Reference (Moving Average of last 10)
+        const avgTravel = travelLog.slice(-10).reduce((a,b)=>a+b,0) / travelLog.slice(-10).length;
+        document.getElementById('refLine').innerText = avgTravel.toFixed(2);
+        document.getElementById('avgTravel').innerText = Math.round(avgTravel);
 
-        const lastT = travelHistory[travelHistory.history - 1] || travelHistory[0];
-        const avgT = travelHistory.slice(-5).reduce((a,b)=>a+b,0) / travelHistory.slice(-5).length;
         const lastNum = spins[spins.length-1];
+        const lastTravel = travelLog[travelLog.length-1];
 
-        // LOGIC: Signature is a blend of immediate rhythm and historical trend
-        let signatureJump = Math.round((lastT * 0.8) + (avgT * 0.2));
+        // LOGIC: If travel is above the orange line, use TOP OVER rhythm
+        // If travel is below orange line, use TOP UNDER rhythm
+        let signatureJump = (lastTravel > avgTravel) ? Math.round(avgTravel + 3) : Math.round(avgTravel - 3);
         
-        // Final Single Number Target
-        lastTarget = wheel[(wheel.indexOf(lastNum) + signatureJump) % 37];
+        // Force a prediction if we have structure
+        currentTarget = wheel[(wheel.indexOf(lastNum) + signatureJump) % 37];
         
-        // Trend Analysis
-        document.getElementById('topHint').innerText = lastT > avgT ? `Trend: Over (${lastTarget})` : `Trend: Under (${lastTarget})`;
+        document.getElementById('bigNum').innerText = currentTarget;
+        document.getElementById('logicNote').innerText = (lastTravel > avgTravel) ? "TOP OVER SIGNATURE" : "TOP UNDER SIGNATURE";
+        document.getElementById('rhythmText').innerText = lastTravel <= 15 ? "STABLE" : "VOLATILE";
     }
 
-    function updateDisplay() {
-        const display = document.getElementById('predictVal');
-        const status = document.getElementById('logicStatus');
+    function updateLog(actual, target, hit) {
+        const lb = document.getElementById('logBox');
+        const row = document.createElement('div');
+        row.className = 'log-row';
+        row.innerHTML = `<span>Spin #${spins.length}: ${actual}</span> <b style="color:${hit?'var(--win)':'var(--red)'}">${hit?'DIRECT HIT':'MISS ('+target+')'}</b>`;
+        lb.prepend(row);
+    }
 
-        if(currentLossStreak >= 4) {
-            display.innerText = "WAIT";
-            display.style.color = "var(--red)";
-            status.innerText = "STRUCTURE BROKEN - WAIT FOR RESET";
-        } else if(lastTarget !== null) {
-            display.innerText = lastTarget;
-            display.style.color = "var(--win)";
-            status.innerText = "IDENTIFIED SIGNATURE DETECTED";
-        } else {
-            display.innerText = "--";
-            status.innerText = "COLLECTING RHYTHM DATA...";
-        }
+    function updateUI() {
+        const wins = wlLog.filter(x=>x==='W').length;
+        const rate = wlLog.length > 0 ? Math.round((wins/wlLog.length)*100) : 0;
+        document.getElementById('winRate').innerText = rate + "%";
 
-        // Stats
-        document.getElementById('lossStreak').innerText = currentLossStreak;
-        document.getElementById('lossStreak').style.color = currentLossStreak >= 3 ? "var(--red)" : "white";
-        
-        const wins = wlHistory.filter(x=>x==='W').length;
-        document.getElementById('winRate').innerText = wlHistory.length > 0 ? Math.round((wins/wlHistory.length)*100) + "%" : "0%";
-        
-        const avg = travelHistory.length > 0 ? Math.round(travelHistory.reduce((a,b)=>a+b,0)/travelHistory.length) : 0;
-        document.getElementById('avgTravel').innerText = avg;
-        document.getElementById('rhythmHint').innerText = (travelHistory[travelHistory.length-1] <= 15) ? "STABLE" : "VOLATILE";
-
-        // History
         const strip = document.getElementById('historyStrip');
         strip.innerHTML = spins.slice(-20).reverse().map(n => {
-            const c = n === 0 ? 'var(--win)' : (redNums.includes(n) ? 'var(--red)' : '#222');
-            return `<div class="chip" style="background:${c}">${n}</div>`;
+            const color = n === 0 ? 'var(--win)' : (redNums.includes(n) ? 'var(--red)' : '#222');
+            return `<div class="chip" style="background:${color}">${n}</div>`;
         }).join('');
     }
 
-    function bulkImport() {
-        const val = document.getElementById('importArea').value;
+    function importData() {
+        const val = document.getElementById('bulkPaste').value;
         const nums = val.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
         nums.forEach(n => addSpin(n));
-        document.getElementById('importArea').value = "";
+        document.getElementById('bulkPaste').value = "";
     }
 </script>
 </body>
