@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shadow Pro - Win/Loss Tracker</title>
+    <title>Shadow Pro - Pattern Logic Engine</title>
     <style>
         :root { --gold: #d4af37; --bg: #0a0a0a; --card: #161616; --win: #2ecc71; --red: #e74c3c; --blue: #3498db; --orange: #ff8c00; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
@@ -12,31 +12,32 @@
         .grid-top { display: grid; grid-template-columns: 1.5fr 1fr; gap: 15px; }
         .panel { background: var(--card); border: 1px solid #333; border-radius: 10px; padding: 15px; }
         
-        /* Prediction Display */
-        .prediction-box { border: 2px solid var(--gold); text-align: center; position: relative; }
-        .predict-val { font-size: 3.5rem; font-weight: bold; color: var(--win); margin: 5px 0; display: block; }
-        .win-badge { position: absolute; top: 10px; right: 10px; background: var(--win); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; display: none; }
+        /* Prediction Header */
+        .prediction-box { border: 2px solid var(--gold); text-align: center; position: relative; min-height: 180px; display: flex; flex-direction: column; justify-content: center; }
+        .predict-val { font-size: 4rem; font-weight: bold; color: var(--win); line-height: 1; }
+        .pattern-tag { background: var(--gold); color: #000; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; display: inline-block; }
 
         /* Table */
         .roulette-table { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; background: #000; padding: 8px; border: 2px solid #333; border-radius: 8px; }
-        .cell { aspect-ratio: 1/1.4; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); font-size: 1.1rem; }
-        .cell:hover { filter: brightness(1.4); transform: scale(1.03); }
+        .cell { aspect-ratio: 1/1.4; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); font-size: 1.1rem; transition: 0.1s; }
+        .cell:hover { filter: brightness(1.4); transform: scale(1.05); background: #333; }
         .zero { grid-row: span 3; background: var(--win); color: #000; }
         .red { background: var(--red); }
         .black { background: #222; }
 
-        /* Win/Loss Log */
-        .log-container { height: 150px; overflow-y: auto; background: #000; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; border: 1px solid #222; }
-        .log-entry { margin-bottom: 4px; padding: 3px; border-bottom: 1px solid #111; display: flex; justify-content: space-between; }
-        .text-win { color: var(--win); font-weight: bold; }
-        .text-loss { color: var(--red); font-weight: bold; }
-
-        /* Utils */
-        .chart-mini { height: 60px; display: flex; align-items: flex-end; gap: 2px; border-bottom: 1px solid #444; margin-top: 10px; }
-        .bar { flex: 1; background: var(--blue); min-width: 10px; }
+        /* Pattern Log */
+        .log-container { height: 160px; overflow-y: auto; background: #000; padding: 10px; border-radius: 6px; font-family: monospace; border: 1px solid #222; }
+        .log-entry { display: flex; justify-content: space-between; border-bottom: 1px solid #111; padding: 4px 0; font-size: 0.85rem; }
+        
+        /* Indicators */
+        .indicator-row { display: flex; gap: 10px; margin-top: 10px; }
+        .ind { flex: 1; padding: 10px; border-radius: 6px; text-align: center; background: #222; font-size: 0.8rem; }
+        .ind-label { display: block; font-size: 0.6rem; color: #888; margin-bottom: 3px; }
+        
         .history-strip { display: flex; gap: 5px; overflow-x: auto; padding: 10px; border-top: 1px solid #333; }
-        .chip { min-width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; }
-        .label { font-size: 0.65rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .chip { min-width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0; }
+        .label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-bottom: 5px; }
+        textarea { width: 100%; background: #111; color: var(--gold); border: 1px solid #444; border-radius: 5px; padding: 8px; height: 45px; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -44,148 +45,168 @@
 <div class="container">
     <div class="grid-top">
         <div class="panel prediction-box">
-            <div id="winAlert" class="win-badge">HIT!</div>
-            <span class="label">Current Prediction (n9)</span>
+            <div id="patternName"><span class="pattern-tag">Analyzing Structure...</span></div>
             <span id="predictVal" class="predict-val">--</span>
+            <span id="predictFormat" style="color:var(--gold); font-weight:bold; letter-spacing:1px;">AWAITING DATA</span>
             
-            <div style="display: flex; justify-content: space-around; background: #222; padding: 10px; border-radius: 6px;">
-                <div><span class="label">TOP OVER</span><span id="valOver" style="color:var(--orange); font-weight:bold;">--</span></div>
-                <div><span class="label">TOP UNDER</span><span id="valUnder" style="color:var(--blue); font-weight:bold;">--</span></div>
+            <div class="indicator-row">
+                <div class="ind"><span class="ind-label">Rhythm</span><b id="indRhythm">STABLE</b></div>
+                <div class="ind"><span class="ind-label">Momentum</span><b id="indMomentum">NEUTRAL</b></div>
+                <div class="ind"><span class="ind-label">Trend</span><b id="indTrend">--</b></div>
             </div>
-            <div class="chart-mini" id="chart"></div>
         </div>
 
         <div class="panel">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span class="label">Performance Log</span>
-                <span id="accuracy" style="font-weight:bold; color:var(--gold);">Rate: 0%</span>
-            </div>
-            <div class="log-container" id="log">
-                <div style="color:#555;">Awaiting results...</div>
-            </div>
+            <span class="label">Sequence History (Win/Loss)</span>
+            <div class="log-container" id="patternLog"></div>
+            <div id="accuracy" style="font-size:0.7rem; color:var(--gold); margin-top:5px; text-align:right;">Accuracy: 0%</div>
         </div>
     </div>
 
-    <div class="roulette-table" id="table">
-        <div class="cell zero" onclick="handleSpin(0)">0</div>
+    <div class="roulette-table" id="rouletteTable">
+        <div class="cell zero" onclick="addSpin(0)">0</div>
     </div>
 
     <div class="panel">
-        <span class="label">Quick Import</span>
-        <textarea id="importArea" style="width:100%; background:#111; color:var(--gold); border:1px solid #444; border-radius:5px; padding:8px; height:40px;" placeholder="5, 22, 1, 33..."></textarea>
-        <button onclick="bulkImport()" style="width:100%; background:var(--gold); border:none; padding:8px; margin-top:5px; font-weight:bold; cursor:pointer; border-radius:5px;">Process History</button>
+        <span class="label">Bulk Pattern Import</span>
+        <textarea id="importArea" placeholder="Paste: 32, 15, 19, 4, 21, 2..."></textarea>
+        <button onclick="bulkImport()" style="width:100%; background:var(--gold); border:none; padding:10px; margin-top:10px; font-weight:bold; cursor:pointer; border-radius:5px;">Inject History</button>
     </div>
 
-    <div class="history-strip" id="history"></div>
+    <div class="history-strip" id="historyStrip"></div>
 </div>
 
 <script>
     const wheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     let spins = [];
-    let stats = { wins: 0, total: 0 };
+    let travelLog = [];
+    let wlLog = []; // Win/Loss history
+    let lastPrediction = null;
 
-    // Init Table
-    const t = document.getElementById('table');
+    // Table Setup
+    const table = document.getElementById('rouletteTable');
     for(let i=1; i<=36; i++){
         const c = document.createElement('div');
         c.className = `cell ${redNumbers.includes(i) ? 'red' : 'black'}`;
         c.innerText = i;
-        c.onclick = () => handleSpin(i);
+        c.onclick = () => addSpin(i);
         if(i%3===0) c.style.gridRow = "1";
         if(i%3===2) c.style.gridRow = "2";
         if(i%3===1) c.style.gridRow = "3";
-        t.appendChild(c);
+        table.appendChild(c);
     }
 
-    function handleSpin(num) {
-        processWinLoss(num);
+    function addSpin(num) {
+        if (lastPrediction) {
+            checkResult(num);
+        }
         spins.push(num);
+        if (spins.length > 1) {
+            const t = calculateTravel(spins[spins.length-2], num);
+            travelLog.push(t);
+        }
+        analyzeStructure();
         updateUI();
     }
 
-    function processWinLoss(actual) {
-        const predText = document.getElementById('predictVal').innerText;
-        if(predText === "--" || predText === "WAIT") return;
+    function calculateTravel(from, to) {
+        let diff = wheel.indexOf(to) - wheel.indexOf(from);
+        return diff < 0 ? diff + 37 : diff;
+    }
 
-        const target = parseInt(predText);
-        const pIdx = wheel.indexOf(target);
-        const aIdx = wheel.indexOf(actual);
-        
-        // n9 logic: target + 4 neighbors on each side
+    function checkResult(num) {
+        const pIdx = wheel.indexOf(lastPrediction);
+        const aIdx = wheel.indexOf(num);
         let diff = Math.abs(pIdx - aIdx);
-        if(diff > 18) diff = 37 - diff;
+        if (diff > 18) diff = 37 - diff;
         
-        const isWin = diff <= 4;
-        stats.total++;
-        if(isWin) {
-            stats.wins++;
-            showWinAlert();
-        }
-
-        const log = document.getElementById('log');
-        if(stats.total === 1) log.innerHTML = "";
+        const isWin = diff <= 4; // n4 neighbors
+        wlLog.push(isWin ? 'W' : 'L');
+        
+        const log = document.getElementById('patternLog');
         const entry = document.createElement('div');
         entry.className = 'log-entry';
-        entry.innerHTML = `<span>Spin #${spins.length + 1}: <b>${actual}</b></span> 
-                           <span class="${isWin ? 'text-win' : 'text-loss'}">${isWin ? 'WIN ✅' : 'LOSS ❌'}</span>`;
+        entry.innerHTML = `<span>Spin #${spins.length+1}: ${num}</span> <b style="color:${isWin?'var(--win)':'var(--red)'}">${isWin?'WIN':'LOSS'}</b>`;
         log.prepend(entry);
+    }
+
+    function analyzeStructure() {
+        if (spins.length < 5) return;
+
+        const lastThreeWL = wlLog.slice(-3).join('');
+        const lastTravel = travelLog[travelLog.length-1];
+        const avgTravel = travelLog.slice(-5).reduce((a,b)=>a+b,0) / 5;
         
-        document.getElementById('accuracy').innerText = `Rate: ${Math.round((stats.wins/stats.total)*100)}%`;
+        let pVal = "--";
+        let pFormat = "WAITING";
+        let pName = "Analyzing Structure...";
+
+        // 1. RECOGNIZING PATTERNS (LWWW Rule)
+        if (wlLog[wlLog.length-1] === 'L') {
+            pName = "RECOVERY PATTERN (L → W)";
+            pFormat = "ENTER AFTER LOSS";
+            pVal = generateTarget(lastTravel, avgTravel);
+        } 
+        // 2. HOT STREAK DETECTION
+        else if (lastThreeWL === 'WWW') {
+            pName = "HOT STREAK (MOMENTUM)";
+            pFormat = "RIDE THE TREND";
+            pVal = generateTarget(lastTravel, avgTravel);
+        }
+        // 3. PHASE KEEPING (Small Travel)
+        else if (lastTravel <= 12 && travelLog[travelLog.length-2] <= 12) {
+            pName = "PHASE KEEPING (STABLE)";
+            pFormat = "SMALL TRAVEL RHYTHM";
+            pVal = generateTarget(lastTravel, avgTravel);
+        }
+        // 4. WEAKENING DETECTION
+        else if (wlLog.slice(-2).join('') === 'LL') {
+            pName = "STRUCTURE WEAKENING";
+            pFormat = "STOP / RESET";
+            pVal = "WAIT";
+        }
+        else {
+            pName = "RANDOM VOLATILITY";
+            pFormat = "NO EDGE - WAIT";
+            pVal = "WAIT";
+        }
+
+        document.getElementById('predictVal').innerText = pVal === "WAIT" ? pVal : pVal + "n4";
+        document.getElementById('predictFormat').innerText = pFormat;
+        document.querySelector('.pattern-tag').innerText = pName;
+        lastPrediction = pVal === "WAIT" ? null : pVal;
+
+        // Indicators
+        document.getElementById('indRhythm').innerText = lastTravel <= 15 ? "CONSISTENT" : "VOLATILE";
+        document.getElementById('indMomentum').innerText = wlLog.filter(x=>x==='W').length >= wlLog.filter(x=>x==='L').length ? "POSITIVE" : "NEGATIVE";
+        document.getElementById('indTrend').innerText = lastTravel > avgTravel ? "TOP OVER" : "TOP UNDER";
+    }
+
+    function generateTarget(lastT, avgT) {
+        // Blends the last jump with the average jump to find the "Signature"
+        const lastNum = spins[spins.length-1];
+        const signatureJump = Math.round((lastT + avgT) / 2);
+        return wheel[(wheel.indexOf(lastNum) + signatureJump) % 37];
     }
 
     function updateUI() {
-        if(spins.length < 2) return;
-        const last = spins[spins.length-1];
-        const prev = spins[spins.length-2];
-        let travel = wheel.indexOf(last) - wheel.indexOf(prev);
-        if(travel < 0) travel += 37;
-
-        // Main n9 Prediction
-        if(travel <= 14) {
-            const pred = wheel[(wheel.indexOf(last) + travel) % 37];
-            document.getElementById('predictVal').innerText = pred + "n9";
-        } else {
-            document.getElementById('predictVal').innerText = "WAIT";
-        }
-
-        // Top Numbers Logic
-        const over = wheel[(wheel.indexOf(last) + Math.round(travel * 1.2)) % 37];
-        const under = wheel[(wheel.indexOf(last) + Math.round(travel * 0.8)) % 37];
-        document.getElementById('valOver').innerText = over + "n4";
-        document.getElementById('valUnder').innerText = under + "n4";
-
-        renderHistory();
-        renderChart(travel);
-    }
-
-    function renderHistory() {
-        const h = document.getElementById('history');
+        // History Chips
+        const h = document.getElementById('historyStrip');
         h.innerHTML = spins.slice(-20).reverse().map(n => {
-            const color = n === 0 ? 'var(--win)' : (redNumbers.includes(n) ? 'var(--red)' : '#222');
-            return `<div class="chip" style="background:${color}">${n}</div>`;
+            const c = n === 0 ? 'var(--win)' : (redNumbers.includes(n) ? 'var(--red)' : '#222');
+            return `<div class="chip" style="background:${c}">${n}</div>`;
         }).join('');
-    }
 
-    function renderChart(t) {
-        const chart = document.getElementById('chart');
-        const bar = document.createElement('div');
-        bar.className = 'bar';
-        bar.style.height = (t / 37 * 100) + "%";
-        chart.appendChild(bar);
-        if(chart.children.length > 20) chart.removeChild(chart.firstChild);
-    }
-
-    function showWinAlert() {
-        const b = document.getElementById('winAlert');
-        b.style.display = 'block';
-        setTimeout(() => b.style.display = 'none', 1500);
+        // Accuracy
+        const wins = wlLog.filter(x=>x==='W').length;
+        document.getElementById('accuracy').innerText = `Accuracy: ${wlLog.length > 0 ? Math.round((wins/wlLog.length)*100) : 0}%`;
     }
 
     function bulkImport() {
         const val = document.getElementById('importArea').value;
-        const nums = val.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
-        nums.forEach(n => handleSpin(n));
+        const nums = val.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
+        nums.forEach(n => addSpin(n));
         document.getElementById('importArea').value = "";
     }
 </script>
