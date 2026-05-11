@@ -3,39 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shadow Pro - Master Single Engine</title>
+    <title>Shadow Pro - Dynamic Bet Engine</title>
     <style>
         :root { --gold: #d4af37; --bg: #0a0a0a; --card: #161616; --win: #2ecc71; --red: #e74c3c; --orange: #ff8c00; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
+        .container { width: 100%; max-width: 1100px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
         .panel { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 15px; }
         
         /* Prediction Header */
-        .prediction-header { text-align: center; border: 2px solid var(--gold); background: #111; margin-bottom: 10px; padding: 10px; }
-        .big-num { font-size: 5.5rem; font-weight: bold; color: var(--win); line-height: 1; margin: 10px 0; }
-        .sub-text { font-size: 0.8rem; letter-spacing: 2px; color: var(--gold); font-weight: bold; }
+        .prediction-header { text-align: center; border: 2px solid var(--gold); background: #111; margin-bottom: 10px; padding: 20px; }
+        .bet-display { font-size: 4rem; font-weight: bold; color: var(--win); line-height: 1.2; margin: 10px 0; min-height: 80px; }
+        .sub-text { font-size: 0.8rem; letter-spacing: 2px; color: var(--gold); font-weight: bold; text-transform: uppercase; }
 
-        /* Stats Bar */
-        .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .stat-item { background: #222; padding: 8px; border-radius: 6px; text-align: center; border-bottom: 2px solid #444; }
-        .label { font-size: 0.6rem; color: #888; text-transform: uppercase; margin-bottom: 3px; display: block; }
+        /* Dropdown Styling */
+        select { background: #222; color: var(--gold); border: 1px solid var(--gold); padding: 10px; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
 
         /* Table Grid */
         .roulette-table { display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; background: #000; padding: 8px; border-radius: 8px; border: 1px solid #333; }
-        .cell { aspect-ratio: 1/1.4; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 3px; border: 1px solid rgba(255,255,255,0.03); font-size: 1rem; }
-        .cell:hover { background: #333; transform: scale(1.02); }
+        .cell { aspect-ratio: 1/1.4; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 3px; border: 1px solid rgba(255,255,255,0.03); font-size: 0.9rem; }
+        .cell:hover { background: #333; }
         .zero { grid-row: span 3; background: var(--win); color: #000; }
         .red { background: var(--red); }
         .black { background: #222; }
 
-        /* Log & Pattern */
-        .log-box { height: 350px; overflow-y: auto; background: #000; padding: 10px; border-radius: 8px; font-family: monospace; border: 1px solid #222; }
+        .log-box { height: 300px; overflow-y: auto; background: #000; padding: 10px; border-radius: 8px; font-family: monospace; border: 1px solid #222; margin-top: 10px; }
         .log-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #111; font-size: 0.8rem; }
-        
-        textarea { width: 100%; background: #000; color: var(--gold); border: 1px solid #444; padding: 10px; border-radius: 6px; height: 60px; box-sizing: border-box; }
+        textarea { width: 100%; background: #000; color: var(--gold); border: 1px solid #444; padding: 10px; border-radius: 6px; height: 50px; box-sizing: border-box; }
         button { width: 100%; background: var(--gold); border: none; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; }
         .history-strip { display: flex; gap: 4px; overflow-x: auto; margin-top: 10px; padding: 5px 0; }
-        .chip { min-width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; border: 1px solid rgba(255,255,255,0.1); }
+        .chip { min-width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -43,24 +39,15 @@
 <div class="container">
     <div>
         <div class="panel prediction-header">
-            <span class="label">Primary Signature Target</span>
-            <div id="bigNum" class="big-num">--</div>
-            <div id="logicNote" class="sub-text">Awaiting Signature Data</div>
-        </div>
-
-        <div class="stats-bar">
-            <div class="stat-item">
-                <span class="label">Orange Line Ref</span>
-                <b id="refLine" style="color:var(--orange)">0.00</b>
-            </div>
-            <div class="stat-item">
-                <span class="label">Avg Travel</span>
-                <b id="avgTravel">0</b>
-            </div>
-            <div class="stat-item">
-                <span class="label">Rhythm</span>
-                <b id="rhythmText">NONE</b>
-            </div>
+            <span class="label">Select Strategy Mode</span>
+            <select id="betType" onchange="processEngine()">
+                <option value="single">Single Number</option>
+                <option value="split">Split (Main + Hot Neighbor)</option>
+                <option value="street">Street (Row of 3)</option>
+                <option value="doubleStreet">Double Street (6-Line)</option>
+            </select>
+            <div id="betResult" class="bet-display">--</div>
+            <div id="logicNote" class="sub-text">Awaiting Data</div>
         </div>
 
         <div class="roulette-table" id="rouletteTable">
@@ -72,15 +59,15 @@
 
     <div>
         <div class="panel">
-            <span class="label">Direct Hit Performance</span>
-            <div id="winRate" style="font-size: 2rem; font-weight: bold; color: var(--win);">0%</div>
+            <span class="label">Session Stats</span>
+            <div id="winRate" style="font-size: 1.5rem; font-weight: bold; color: var(--win);">Rate: 0%</div>
             <div class="log-box" id="logBox"></div>
         </div>
 
         <div class="panel" style="margin-top: 15px;">
-            <span class="label">Bulk Data Paste</span>
-            <textarea id="bulkPaste" placeholder="e.g. 5, 20, 15, 32, 0..."></textarea>
-            <button onclick="importData()">Calculate from Data</button>
+            <span class="label">Bulk Data</span>
+            <textarea id="bulkPaste" placeholder="e.g. 1, 5, 22..."></textarea>
+            <button onclick="importData()">Sync Engine</button>
         </div>
     </div>
 </div>
@@ -90,10 +77,9 @@
     const redNums = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     let spins = [];
     let travelLog = [];
-    let wlLog = [];
-    let currentTarget = null;
+    let currentBet = [];
 
-    // Table
+    // Table Generation
     const table = document.getElementById('rouletteTable');
     for(let i=1; i<=36; i++){
         const c = document.createElement('div');
@@ -107,19 +93,16 @@
     }
 
     function addSpin(num) {
-        if(currentTarget !== null) {
-            const isHit = (num === currentTarget);
-            wlLog.push(isHit ? 'W' : 'L');
-            updateLog(num, currentTarget, isHit);
+        if(currentBet.length > 0) {
+            const isHit = currentBet.includes(num);
+            updateLog(num, currentBet, isHit);
         }
-        
         spins.push(num);
         if(spins.length > 1) {
             let dist = wheel.indexOf(num) - wheel.indexOf(spins[spins.length-2]);
             if(dist < 0) dist += 37;
             travelLog.push(dist);
         }
-        
         processEngine();
         updateUI();
     }
@@ -127,39 +110,68 @@
     function processEngine() {
         if(spins.length < 3) return;
 
-        // Orange Line Reference (Moving Average of last 10)
-        const avgTravel = travelLog.slice(-10).reduce((a,b)=>a+b,0) / travelLog.slice(-10).length;
-        document.getElementById('refLine').innerText = avgTravel.toFixed(2);
-        document.getElementById('avgTravel').innerText = Math.round(avgTravel);
-
+        const avgTravel = travelLog.slice(-10).reduce((a,b)=>a+b,0) / travelLog.length;
         const lastNum = spins[spins.length-1];
         const lastTravel = travelLog[travelLog.length-1];
+        
+        // Pivot Number Calculation
+        let jump = (lastTravel > avgTravel) ? Math.round(avgTravel + 2) : Math.round(avgTravel - 2);
+        let pivot = wheel[(wheel.indexOf(lastNum) + jump) % 37];
+        
+        const type = document.getElementById('betType').value;
+        let finalBet = [];
+        let label = "";
 
-        // LOGIC: If travel is above the orange line, use TOP OVER rhythm
-        // If travel is below orange line, use TOP UNDER rhythm
-        let signatureJump = (lastTravel > avgTravel) ? Math.round(avgTravel + 3) : Math.round(avgTravel - 3);
-        
-        // Force a prediction if we have structure
-        currentTarget = wheel[(wheel.indexOf(lastNum) + signatureJump) % 37];
-        
-        document.getElementById('bigNum').innerText = currentTarget;
-        document.getElementById('logicNote').innerText = (lastTravel > avgTravel) ? "TOP OVER SIGNATURE" : "TOP UNDER SIGNATURE";
-        document.getElementById('rhythmText').innerText = lastTravel <= 15 ? "STABLE" : "VOLATILE";
+        switch(type) {
+            case 'single':
+                finalBet = [pivot];
+                label = `Single: ${pivot}`;
+                break;
+            case 'split':
+                const neighbors = getTableNeighbors(pivot);
+                const hotNeighbor = neighbors.sort((a,b) => 
+                    spins.filter(s => s === b).length - spins.filter(s => s === a).length
+                )[0];
+                finalBet = [pivot, hotNeighbor];
+                label = `Split: ${pivot}-${hotNeighbor}`;
+                break;
+            case 'street':
+                const start = pivot - ((pivot - 1) % 3);
+                finalBet = [start, start+1, start+2];
+                label = `Street: ${start}-${start+2}`;
+                break;
+            case 'doubleStreet':
+                const rowStart = pivot - ((pivot - 1) % 3);
+                const secondRow = (rowStart > 30) ? rowStart - 3 : rowStart + 3;
+                finalBet = [rowStart, rowStart+1, rowStart+2, secondRow, secondRow+1, secondRow+2].sort((a,b)=>a-b);
+                label = `6-Line: ${finalBet[0]}-${finalBet[5]}`;
+                break;
+        }
+
+        currentBet = finalBet;
+        document.getElementById('betResult').innerText = finalBet.join(", ");
+        document.getElementById('logicNote').innerText = label;
     }
 
-    function updateLog(actual, target, hit) {
+    function getTableNeighbors(n) {
+        if (n === 0) return [1, 2, 3];
+        let res = [];
+        if (n > 3) res.push(n - 3); // Above
+        if (n < 34) res.push(n + 3); // Below
+        if (n % 3 !== 1) res.push(n - 1); // Left
+        if (n % 3 !== 0) res.push(n + 1); // Right
+        return res;
+    }
+
+    function updateLog(actual, bet, hit) {
         const lb = document.getElementById('logBox');
         const row = document.createElement('div');
         row.className = 'log-row';
-        row.innerHTML = `<span>Spin #${spins.length}: ${actual}</span> <b style="color:${hit?'var(--win)':'var(--red)'}">${hit?'DIRECT HIT':'MISS ('+target+')'}</b>`;
+        row.innerHTML = `<span>Spin #${spins.length}: ${actual}</span> <b style="color:${hit?'var(--win)':'var(--red)'}">${hit?'HIT':'MISS'}</b>`;
         lb.prepend(row);
     }
 
     function updateUI() {
-        const wins = wlLog.filter(x=>x==='W').length;
-        const rate = wlLog.length > 0 ? Math.round((wins/wlLog.length)*100) : 0;
-        document.getElementById('winRate').innerText = rate + "%";
-
         const strip = document.getElementById('historyStrip');
         strip.innerHTML = spins.slice(-20).reverse().map(n => {
             const color = n === 0 ? 'var(--win)' : (redNums.includes(n) ? 'var(--red)' : '#222');
