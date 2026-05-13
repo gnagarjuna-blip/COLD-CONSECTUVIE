@@ -2,218 +2,84 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shadow Pro - Pivot & Cold Split</title>
+    <title>Roulette Terminal Predictor</title>
     <style>
-        :root { --gold: #d4af37; --bg: #0a0a0a; --card: #161616; --win: #2ecc71; --red: #e74c3c; --orange: #ff8c00; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 1100px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
-        .panel { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 15px; }
-        
-        /* Display Area */
-        .prediction-header { text-align: center; border: 2px solid var(--gold); background: #111; margin-bottom: 10px; padding: 15px; }
-        .bet-pool { font-size: 1.8rem; font-weight: bold; color: var(--win); line-height: 1.4; margin: 10px 0; min-height: 60px; word-wrap: break-word; letter-spacing: 1px; }
-        .sub-text { font-size: 0.7rem; letter-spacing: 2px; color: var(--gold); font-weight: bold; text-transform: uppercase; }
-
-        select { background: #222; color: var(--gold); border: 1px solid var(--gold); padding: 8px; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
-
-        /* Roulette Table */
-        .roulette-table { display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; background: #000; padding: 8px; border-radius: 8px; border: 1px solid #333; }
-        .cell { aspect-ratio: 1/1.4; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 3px; border: 1px solid rgba(255,255,255,0.03); font-size: 0.9rem; }
-        .cell:hover { background: #444; }
-        .zero { grid-row: span 3; background: var(--win); color: #000; }
-        .red { background: var(--red); }
-        .black { background: #222; }
-
-        /* Stats & Logs */
-        .log-box { height: 250px; overflow-y: auto; background: #000; padding: 10px; border-radius: 8px; font-family: monospace; border: 1px solid #222; margin-top: 10px; }
-        .log-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #111; font-size: 0.8rem; }
-        .streak-card { background: #222; padding: 10px; border-radius: 8px; text-align: center; margin-top: 10px; border: 1px solid #444; }
-        
-        textarea { width: 100%; background: #000; color: var(--gold); border: 1px solid #444; padding: 10px; border-radius: 6px; height: 40px; box-sizing: border-box; }
-        button { width: 100%; background: var(--gold); border: none; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 5px; }
-        .history-strip { display: flex; gap: 4px; overflow-x: auto; margin-top: 10px; padding: 5px 0; }
-        .chip { min-width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; }
+        body { font-family: sans-serif; background: #1a472a; color: white; display: flex; flex-direction: column; align-items: center; }
+        .grid-container { display: grid; grid-template-columns: repeat(12, 50px); gap: 5px; margin: 20px; border: 2px solid gold; padding: 10px; }
+        .cell { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #ccc; font-weight: bold; border-radius: 4px; transition: 0.2s; }
+        .cell:hover { transform: scale(1.1); background: gold !important; color: black; }
+        .red { background: #c21807; }
+        .black { background: #111; }
+        .zero { background: #008000; grid-column: 1 / 13; width: auto; margin-bottom: 10px; }
+        #results { background: rgba(0,0,0,0.5); padding: 20px; border-radius: 10px; width: 80%; max-width: 600px; text-align: center; }
+        .highlight { color: #f1c40f; font-size: 1.2em; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div>
-        <div class="panel prediction-header">
-            <span class="label">Betting Mode</span>
-            <select id="betType" onchange="resetPool()">
-                <option value="single">Single Number</option>
-                <option value="split" selected>Split (Pivot + Cold Neighbor)</option>
-                <option value="street">Street (3-Numbers)</option>
-                <option value="doubleStreet">Double Street (6-Numbers)</option>
-            </select>
-            <div id="betResult" class="bet-pool">WAITING FOR DATA</div>
-            <div id="logicNote" class="sub-text">Logic: Pivot + Coldest Physical Neighbor</div>
+    <h1>Roulette Terminal Predictor</h1>
+    <p>Click a number to see the imaginary numbers and their terminals.</p>
+
+    <div class="grid-container" id="board">
         </div>
 
-        <div class="roulette-table" id="rouletteTable">
-            <div class="cell zero" onclick="addSpin(0)">0</div>
-        </div>
-
-        <div class="history-strip" id="historyStrip"></div>
+    <div id="results">
+        <h3>Analysis for Number: <span id="selected-num">-</span></h3>
+        <p>Imaginary Numbers: <span id="imaginary-nums" class="highlight"></span></p>
+        <p>Predicted Terminals: <span id="prediction" class="highlight"></span></p>
     </div>
-
-    <div>
-        <div class="panel">
-            <span class="label">Session Monitoring</span>
-            <div class="streak-card">
-                <span class="label">Current Round Losses</span>
-                <div id="currentMiss" style="font-size: 1.5rem; color: var(--red);">0</div>
-            </div>
-            <div class="streak-card">
-                <span class="label">Max Loss Streak (Session)</span>
-                <div id="maxMiss" style="font-size: 1.5rem; color: var(--gold);">0</div>
-            </div>
-            <div class="log-box" id="logBox"></div>
-        </div>
-
-        <div class="panel" style="margin-top: 10px;">
-            <textarea id="bulkPaste" placeholder="Enter history..."></textarea>
-            <button onclick="importData()">Analyze & Accumulate</button>
-        </div>
-    </div>
-</div>
 
 <script>
-    const wheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-    const redNums = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-    let spins = [];
-    let travelLog = [];
-    let accumulationArray = []; 
-    let currentMissCount = 0;
-    let maxMissStreak = 0;
+    const terminals = {
+        1:[8], 2:[7,9], 3:[8], 4:[11], 5:[10,12], 6:[11], 7:[2,9], 8:[1,3,13,15], 9:[2,14],
+        10:[5,17], 11:[4,6,16,18], 12:[5,17], 13:[8,20], 14:[7,9,19,21], 15:[8,20], 16:[11,23],
+        17:[10,12,22,24], 18:[11,23], 19:[14,26], 20:[13,15,25,27], 21:[14,26], 22:[17,29],
+        23:[16,18,28,30], 24:[17,29], 25:[20,32], 26:[19,21,31,33], 27:[20,32], 28:[23,35],
+        29:[22,24,34,36], 30:[23,35], 31:[26], 32:[25,27], 33:[26], 34:[29], 35:[28,30], 36:[29]
+    };
 
-    const table = document.getElementById('rouletteTable');
-    for(let i=1; i<=36; i++){
-        const c = document.createElement('div');
-        c.className = `cell ${redNums.includes(i) ? 'red' : 'black'}`;
-        c.innerText = i;
-        c.onclick = () => addSpin(i);
-        if(i%3===0) c.style.gridRow = "1";
-        if(i%3===2) c.style.gridRow = "2";
-        if(i%3===1) c.style.gridRow = "3";
-        table.appendChild(c);
-    }
+    const redNumbers = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 
-    function addSpin(num) {
-        let isHit = false;
-        const flatPool = accumulationArray.flat();
-
-        if(flatPool.length > 0) {
-            isHit = flatPool.includes(num);
-            if(isHit) {
-                updateLog(num, "HIT ✅", true);
-                accumulationArray = []; 
-                currentMissCount = 0;
-            } else {
-                updateLog(num, "MISS ❌", false);
-                currentMissCount++;
-                if(currentMissCount > maxMissStreak) maxMissStreak = currentMissCount;
+    function setupBoard() {
+        const board = document.getElementById('board');
+        // We iterate through columns as per roulette layout (3 rows)
+        for (let row = 3; row >= 1; row--) {
+            for (let i = 0; i < 12; i++) {
+                let num = (i * 3) + row;
+                const div = document.createElement('div');
+                div.className = `cell ${redNumbers.includes(num) ? 'red' : 'black'}`;
+                div.textContent = num;
+                div.onclick = () => calculate(num, row);
+                board.appendChild(div);
             }
         }
-
-        spins.push(num);
-        if(spins.length > 1) {
-            let dist = wheel.indexOf(num) - wheel.indexOf(spins[spins.length-2]);
-            if(dist < 0) dist += 37;
-            travelLog.push(dist);
-        }
-
-        generateAccumulatedPrediction();
-        updateUI();
     }
 
-    function generateAccumulatedPrediction() {
-        if(spins.length < 3) return;
+    function calculate(num, colType) {
+        let imaginary = [];
+        // Determine offsets based on column type
+        if (colType === 1) imaginary = [num + 1, num - 1];
+        else if (colType === 2) imaginary = [num + 2, num - 2];
+        else if (colType === 3) imaginary = [num + 3, num - 3];
 
-        const avgT = travelLog.slice(-10).reduce((a,b)=>a+b,0) / travelLog.length;
-        const lastNum = spins[spins.length-1];
-        const lastT = travelLog[travelLog.length-1];
+        // Filter out numbers outside 1-36 range
+        const validImaginary = imaginary.filter(n => n >= 1 && n <= 36);
         
-        let jump = (lastT > avgT) ? Math.round(avgT + 2) : Math.round(avgT - 2);
-        let pivot = wheel[(wheel.indexOf(lastNum) + jump) % 37];
-        
-        const type = document.getElementById('betType').value;
-        let newBlock = [];
+        let allTerminals = [];
+        validImaginary.forEach(img => {
+            allTerminals.push(img); // Include imaginary number itself
+            if (terminals[img]) {
+                allTerminals.push(...terminals[img]);
+            }
+        });
 
-        switch(type) {
-            case 'single': newBlock = [pivot]; break;
-            case 'split':
-                const neighbors = getTableNeighbors(pivot);
-                // COLD LOGIC: find neighbor that appeared furthest back in history
-                const coldNeighbor = neighbors.sort((a,b) => {
-                    const lastA = spins.lastIndexOf(a);
-                    const lastB = spins.lastIndexOf(b);
-                    return lastA - lastB; // Smaller index means it's colder
-                })[0];
-                newBlock = [pivot, coldNeighbor];
-                break;
-            case 'street':
-                const s = pivot - ((pivot - 1) % 3);
-                newBlock = [s, s+1, s+2];
-                break;
-            case 'doubleStreet':
-                const rs = pivot - ((pivot - 1) % 3);
-                const s2 = (rs > 30) ? rs - 3 : rs + 3;
-                newBlock = [rs, rs+1, rs+2, s2, s2+1, s2+2];
-                break;
-        }
-
-        accumulationArray.push(newBlock);
-
-        const displayText = accumulationArray
-            .map(block => block.sort((a,b)=>a-b).join(","))
-            .join(" - ");
-            
-        document.getElementById('betResult').innerText = displayText;
+        // Update UI
+        document.getElementById('selected-num').textContent = num;
+        document.getElementById('imaginary-nums').textContent = validImaginary.join(', ');
+        document.getElementById('prediction').textContent = [...new Set(allTerminals)].join(', ');
     }
 
-    function getTableNeighbors(n) {
-        if (n === 0) return [1, 2, 3];
-        let res = [];
-        if (n > 3) res.push(n - 3);
-        if (n < 34) res.push(n + 3);
-        if (n % 3 !== 1) res.push(n - 1);
-        if (n % 3 !== 0) res.push(n + 1);
-        return res;
-    }
-
-    function updateLog(actual, status, hit) {
-        const lb = document.getElementById('logBox');
-        const row = document.createElement('div');
-        row.className = 'log-row';
-        row.innerHTML = `<span>Spin: ${actual}</span> <b style="color:${hit?'var(--win)':'var(--red)'}">${status}</b>`;
-        lb.prepend(row);
-    }
-
-    function updateUI() {
-        document.getElementById('currentMiss').innerText = currentMissCount;
-        document.getElementById('maxMiss').innerText = maxMissStreak;
-        const strip = document.getElementById('historyStrip');
-        strip.innerHTML = spins.slice(-20).reverse().map(n => {
-            const color = n === 0 ? 'var(--win)' : (redNums.includes(n) ? 'var(--red)' : '#222');
-            return `<div class="chip" style="background:${color}">${n}</div>`;
-        }).join('');
-    }
-
-    function resetPool() {
-        accumulationArray = [];
-        generateAccumulatedPrediction();
-        updateUI();
-    }
-
-    function importData() {
-        const val = document.getElementById('bulkPaste').value;
-        const nums = val.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
-        nums.forEach(n => addSpin(n));
-        document.getElementById('bulkPaste').value = "";
-    }
+    setupBoard();
 </script>
 </body>
 </html>
